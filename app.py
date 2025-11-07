@@ -1,5 +1,6 @@
 import os
-from flask import Flask, render_template, request, send_file, jsonify, flash, redirect, url_for
+import uuid
+from flask import Flask, render_template, request, send_file, jsonify
 from werkzeug.utils import secure_filename
 import tempfile
 from audio_processor import AudioProcessor
@@ -8,6 +9,9 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size
 app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
+
+# Store file mappings in memory (in production, use Redis or database)
+file_storage = {}
 
 ALLOWED_EXTENSIONS = {'mp3', 'ac3', 'aac'}
 
@@ -40,11 +44,17 @@ def upload_file():
         processor = AudioProcessor(filepath)
         stats = processor.get_statistics()
         
-        # Store filepath in session for later use
+        # Generate a unique file ID and store the mapping
+        file_id = str(uuid.uuid4())
+        file_storage[file_id] = {
+            'filepath': filepath,
+            'filename': filename
+        }
+        
         return jsonify({
             'success': True,
+            'file_id': file_id,
             'filename': filename,
-            'filepath': filepath,
             'statistics': stats
         })
     except Exception as e:
@@ -54,10 +64,15 @@ def upload_file():
 def process_audio():
     try:
         data = request.get_json()
-        filepath = data.get('filepath')
+        file_id = data.get('file_id')
         operation = data.get('operation')
         
-        if not filepath or not os.path.exists(filepath):
+        if not file_id or file_id not in file_storage:
+            return jsonify({'error': 'Invalid file ID'}), 404
+        
+        filepath = file_storage[file_id]['filepath']
+        
+        if not os.path.exists(filepath):
             return jsonify({'error': 'File not found'}), 404
         
         processor = AudioProcessor(filepath)
@@ -79,26 +94,35 @@ def process_audio():
         else:
             return jsonify({'error': 'Invalid operation'}), 400
         
+        # Store the output file with a new ID
+        output_id = str(uuid.uuid4())
+        file_storage[output_id] = {
+            'filepath': output_path,
+            'filename': os.path.basename(output_path)
+        }
+        
         return jsonify({
             'success': True,
-            'output_path': output_path,
+            'file_id': output_id,
             'filename': os.path.basename(output_path)
         })
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/download/<path:filepath>')
-def download_file(filepath):
+@app.route('/download/<file_id>')
+def download_file(file_id):
     try:
-        # Security: only allow files from temp directory
-        if not filepath.startswith(tempfile.gettempdir()):
-            return jsonify({'error': 'Invalid file path'}), 403
+        if file_id not in file_storage:
+            return jsonify({'error': 'Invalid file ID'}), 404
+        
+        file_info = file_storage[file_id]
+        filepath = file_info['filepath']
         
         if not os.path.exists(filepath):
             return jsonify({'error': 'File not found'}), 404
         
-        return send_file(filepath, as_attachment=True)
+        return send_file(filepath, as_attachment=True, download_name=file_info['filename'])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

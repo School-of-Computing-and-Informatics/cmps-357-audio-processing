@@ -364,7 +364,7 @@
     </div>
     
     <script>
-        let uploadedFilePath = null;
+        let uploadedFileId = null;
         
         // File input handling
         document.getElementById('audioFile').addEventListener('change', function(e) {
@@ -397,7 +397,7 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    uploadedFilePath = data.filepath;
+                    uploadedFileId = data.file_id;
                     displayStatistics(data.statistics);
                     document.getElementById('statsSection').style.display = 'block';
                     document.getElementById('processingSection').style.display = 'block';
@@ -462,10 +462,10 @@
         document.getElementById('processBtn').addEventListener('click', async function() {
             const operation = document.getElementById('operation').value;
             
-            if (!operation || !uploadedFilePath) return;
+            if (!operation || !uploadedFileId) return;
             
             const params = {
-                filepath: uploadedFilePath,
+                file_id: uploadedFileId,
                 operation: operation
             };
             
@@ -496,7 +496,7 @@
                 
                 if (data.success) {
                     const downloadBtn = document.getElementById('downloadBtn');
-                    downloadBtn.href = '/download/' + encodeURIComponent(data.output_path);
+                    downloadBtn.href = '/download/' + data.file_id;
                     downloadBtn.download = data.filename;
                     document.getElementById('downloadSection').style.display = 'block';
                 } else {
