@@ -44,6 +44,20 @@ Download from https://ffmpeg.org/download.html and add to PATH
 pip install -r requirements.txt
 ```
 
+## Testing
+
+Run the test suite:
+
+```bash
+python -m pytest test_app.py -v
+```
+
+Or simply:
+
+```bash
+python test_app.py
+```
+
 ## Usage
 
 ### Running the Application
