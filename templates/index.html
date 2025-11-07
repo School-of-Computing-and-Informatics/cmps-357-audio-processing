@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Processing Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .upload-section {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .file-input-label {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+        
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .file-name {
+            margin-top: 15px;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .upload-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        
+        .upload-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+        }
+        
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .statistics-section, .processing-section {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+        
+        .section-title {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .processing-controls {
+            background: #f8f9ff;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .operation-selector {
+            margin-bottom: 25px;
+        }
+        
+        .operation-selector label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .operation-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+        }
+        
+        .parameters {
+            margin-top: 20px;
+        }
+        
+        .param-group {
+            margin-bottom: 20px;
+        }
+        
+        .param-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .param-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+        
+        .param-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .param-description {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .process-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        
+        .process-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .download-section {
+            display: none;
+            margin-top: 30px;
+            text-align: center;
+            padding: 30px;
+            background: #f0f8ff;
+            border-radius: 15px;
+        }
+        
+        .download-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        
+        .download-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Audio Processing</h1>
+        <p class="subtitle">Upload and process your audio files with professional effects</p>
+        
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <div class="file-input-wrapper">
+                <label for="audioFile" class="file-input-label">Choose Audio File</label>
+                <input type="file" id="audioFile" accept=".mp3,.aac,.ac3" />
+            </div>
+            <div class="file-name" id="fileName"></div>
+            <button class="upload-btn" id="uploadBtn" disabled>Upload & Analyze</button>
+        </div>
+        
+        <div class="loading" id="loadingUpload">
+            <div class="spinner"></div>
+            <p>Analyzing audio file...</p>
+        </div>
+        
+        <!-- Statistics Section -->
+        <div class="statistics-section" id="statsSection">
+            <h2 class="section-title">📊 Audio Statistics</h2>
+            <div class="stats-grid" id="statsGrid"></div>
+        </div>
+        
+        <!-- Processing Section -->
+        <div class="processing-section" id="processingSection">
+            <h2 class="section-title">⚙️ Audio Processing</h2>
+            <div class="processing-controls">
+                <div class="operation-selector">
+                    <label for="operation">Select Operation:</label>
+                    <select id="operation">
+                        <option value="">-- Select an operation --</option>
+                        <option value="compressor">Compressor</option>
+                        <option value="limiter">Limiter</option>
+                    </select>
+                </div>
+                
+                <div class="parameters" id="parameters"></div>
+                
+                <button class="process-btn" id="processBtn" disabled>Apply Processing</button>
+            </div>
+        </div>
+        
+        <div class="loading" id="loadingProcess">
+            <div class="spinner"></div>
+            <p>Processing audio...</p>
+        </div>
+        
+        <!-- Download Section -->
+        <div class="download-section" id="downloadSection">
+            <h3>✅ Processing Complete!</h3>
+            <p style="margin: 20px 0;">Your processed audio file is ready for download.</p>
+            <a class="download-btn" id="downloadBtn">Download Processed Audio</a>
+        </div>
+    </div>
+    
+    <script>
+        let uploadedFileId = null;
+        
+        // File input handling
+        document.getElementById('audioFile').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || '';
+            document.getElementById('fileName').textContent = fileName ? `Selected: ${fileName}` : '';
+            document.getElementById('uploadBtn').disabled = !fileName;
+        });
+        
+        // Upload and analyze
+        document.getElementById('uploadBtn').addEventListener('click', async function() {
+            const fileInput = document.getElementById('audioFile');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            document.getElementById('loadingUpload').style.display = 'block';
+            document.getElementById('statsSection').style.display = 'none';
+            document.getElementById('processingSection').style.display = 'none';
+            document.getElementById('downloadSection').style.display = 'none';
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    uploadedFileId = data.file_id;
+                    displayStatistics(data.statistics);
+                    document.getElementById('statsSection').style.display = 'block';
+                    document.getElementById('processingSection').style.display = 'block';
+                } else {
+                    showError(data.error || 'Upload failed');
+                }
+            } catch (error) {
+                showError('Error uploading file: ' + error.message);
+            } finally {
+                document.getElementById('loadingUpload').style.display = 'none';
+            }
+        });
+        
+        // Operation selector
+        document.getElementById('operation').addEventListener('change', function() {
+            const operation = this.value;
+            const parametersDiv = document.getElementById('parameters');
+            document.getElementById('processBtn').disabled = !operation;
+            
+            if (operation === 'compressor') {
+                parametersDiv.innerHTML = `
+                    <div class="param-group">
+                        <label for="threshold">Threshold (dB):</label>
+                        <input type="number" id="threshold" value="-20" step="1" min="-60" max="0">
+                        <div class="param-description">Level above which compression is applied (default: -20 dB)</div>
+                    </div>
+                    <div class="param-group">
+                        <label for="ratio">Ratio:</label>
+                        <input type="number" id="ratio" value="4" step="0.5" min="1" max="20">
+                        <div class="param-description">Compression ratio, e.g., 4:1 (default: 4)</div>
+                    </div>
+                    <div class="param-group">
+                        <label for="attack">Attack (ms):</label>
+                        <input type="number" id="attack" value="5" step="1" min="0" max="100">
+                        <div class="param-description">Time to reach full compression (default: 5 ms)</div>
+                    </div>
+                    <div class="param-group">
+                        <label for="release">Release (ms):</label>
+                        <input type="number" id="release" value="50" step="5" min="10" max="500">
+                        <div class="param-description">Time to return to normal (default: 50 ms)</div>
+                    </div>
+                `;
+            } else if (operation === 'limiter') {
+                parametersDiv.innerHTML = `
+                    <div class="param-group">
+                        <label for="threshold">Threshold (dB):</label>
+                        <input type="number" id="threshold" value="-1" step="0.1" min="-10" max="0">
+                        <div class="param-description">Maximum output level (default: -1 dB)</div>
+                    </div>
+                    <div class="param-group">
+                        <label for="release">Release (ms):</label>
+                        <input type="number" id="release" value="50" step="5" min="10" max="500">
+                        <div class="param-description">Time to return to normal (default: 50 ms)</div>
+                    </div>
+                `;
+            } else {
+                parametersDiv.innerHTML = '';
+            }
+        });
+        
+        // Process audio
+        document.getElementById('processBtn').addEventListener('click', async function() {
+            const operation = document.getElementById('operation').value;
+            
+            if (!operation || !uploadedFileId) return;
+            
+            const params = {
+                file_id: uploadedFileId,
+                operation: operation
+            };
+            
+            // Get parameters based on operation
+            if (operation === 'compressor') {
+                params.threshold = parseFloat(document.getElementById('threshold').value);
+                params.ratio = parseFloat(document.getElementById('ratio').value);
+                params.attack = parseFloat(document.getElementById('attack').value);
+                params.release = parseFloat(document.getElementById('release').value);
+            } else if (operation === 'limiter') {
+                params.threshold = parseFloat(document.getElementById('threshold').value);
+                params.release = parseFloat(document.getElementById('release').value);
+            }
+            
+            document.getElementById('loadingProcess').style.display = 'block';
+            document.getElementById('downloadSection').style.display = 'none';
+            
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const downloadBtn = document.getElementById('downloadBtn');
+                    downloadBtn.href = '/download/' + data.file_id;
+                    downloadBtn.download = data.filename;
+                    document.getElementById('downloadSection').style.display = 'block';
+                } else {
+                    showError(data.error || 'Processing failed');
+                }
+            } catch (error) {
+                showError('Error processing audio: ' + error.message);
+            } finally {
+                document.getElementById('loadingProcess').style.display = 'none';
+            }
+        });
+        
+        function displayStatistics(stats) {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Max Level</div>
+                    <div class="stat-value">${stats.max_dbfs} dB</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Min Level</div>
+                    <div class="stat-value">${stats.min_dbfs} dB</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Duration</div>
+                    <div class="stat-value">${stats.duration_seconds} s</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Non-Silence</div>
+                    <div class="stat-value">${stats.non_silence_seconds} s</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Sample Rate</div>
+                    <div class="stat-value">${stats.sample_rate} Hz</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Channels</div>
+                    <div class="stat-value">${stats.channels}</div>
+                </div>
+            `;
+        }
+        
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            document.querySelector('.container').insertBefore(errorDiv, document.querySelector('.upload-section'));
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+    </script>
+</body>
+</html>
