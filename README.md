@@ -85,6 +85,19 @@ FLASK_DEBUG=true python app.py
 6. Click "Apply Processing" to process the audio
 7. Click "Download Processed Audio" to save the result
 
+### Command-Line Usage (Optional)
+
+You can also use the AudioProcessor class directly from Python:
+
+```bash
+python example_usage.py path/to/audio.mp3
+```
+
+This will:
+- Display audio statistics
+- Apply compression and limiting with default parameters
+- Save processed files to the temp directory
+
 ### Compressor Parameters
 
 - **Threshold (dB)**: Level above which compression is applied (default: -20 dB)
