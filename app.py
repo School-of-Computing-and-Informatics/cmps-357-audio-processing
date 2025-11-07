@@ -58,7 +58,9 @@ def upload_file():
             'statistics': stats
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Log the error for debugging (in production, use proper logging)
+        print(f"Error in upload_file: {str(e)}")
+        return jsonify({'error': 'An error occurred while processing the file'}), 500
 
 @app.route('/process', methods=['POST'])
 def process_audio():
@@ -108,7 +110,9 @@ def process_audio():
         })
     
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Log the error for debugging (in production, use proper logging)
+        print(f"Error in process_audio: {str(e)}")
+        return jsonify({'error': 'An error occurred while processing the audio'}), 500
 
 @app.route('/download/<file_id>')
 def download_file(file_id):
@@ -124,7 +128,12 @@ def download_file(file_id):
         
         return send_file(filepath, as_attachment=True, download_name=file_info['filename'])
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Log the error for debugging (in production, use proper logging)
+        print(f"Error in download_file: {str(e)}")
+        return jsonify({'error': 'An error occurred while downloading the file'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Use environment variable to control debug mode
+    # In production, set FLASK_DEBUG=False or don't set it at all
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(debug=debug_mode, host='0.0.0.0', port=5000)

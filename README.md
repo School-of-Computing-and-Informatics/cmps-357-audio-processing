@@ -54,6 +54,13 @@ python app.py
 
 The application will start on `http://localhost:5000`
 
+**For development with debug mode:**
+```bash
+FLASK_DEBUG=true python app.py
+```
+
+**Note:** Debug mode should never be enabled in production environments as it allows arbitrary code execution.
+
 ### Using the Web Interface
 
 1. Open your browser and navigate to `http://localhost:5000`
