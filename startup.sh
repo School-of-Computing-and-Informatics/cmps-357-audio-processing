@@ -2,8 +2,8 @@
 
 # 1. Check for venv/.venv, create .venv if missing
 if [[ ! -d ".venv" && ! -d "venv" ]]; then
-    echo "Creating Python virtual environment in .venv..."
-    python3 -m venv .venv
+    echo "Creating Python virtual environment in .venv using pyenv's python..."
+    python -m venv .venv
 fi
 
 # 2. Activate the virtual environment
@@ -27,7 +27,7 @@ fi
 # 4. Install Python dependencies
 if [[ -f "requirements.txt" ]]; then
     echo "Installing Python dependencies..."
-    pip install --upgrade pip
+    pip install --upgrade pip setuptools wheel
     pip install -r requirements.txt
 else
     echo "requirements.txt not found. Exiting."
