@@ -4,59 +4,59 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         User Browser                             │
-│  ┌──────────────────────────────────────────────────────────┐  │
+│                         User Browser                            │
+│  ┌───────────────────────────────────────────────────────────┐  │
 │  │           Modern Web Interface (HTML/CSS/JS)              │  │
 │  │  - File upload UI                                         │  │
 │  │  - Statistics display                                     │  │
 │  │  - Processing controls                                    │  │
 │  │  - Download functionality                                 │  │
-│  └────────────────────┬──────────────────────────────────────┘  │
-└─────────────────────────┼─────────────────────────────────────────┘
+│  └─────────────────────┬─────────────────────────────────────┘  │
+└────────────────────────┼────────────────────────────────────────┘
                          │ HTTP/JSON
                          │
-        ┌────────────────▼───────────────────┐
+        ┌────────────────▼────────────────────┐
         │      Flask Web Server               │
-        │  ┌──────────────────────────────┐  │
-        │  │  app.py - Main Application   │  │
-        │  │  - Route handlers             │  │
-        │  │  - File management (UUID)     │  │
-        │  │  - Error handling             │  │
-        │  │  - Security controls          │  │
-        │  └───────────┬──────────────────┘  │
+        │  ┌──────────────────────────────┐   │
+        │  │  app.py - Main Application   │   │
+        │  │  - Route handlers            │   │
+        │  │  - File management (UUID)    │   │
+        │  │  - Error handling            │   │
+        │  │  - Security controls         │   │
+        │  └───────────┬──────────────────┘   │
         │              │                      │
-        │  ┌───────────▼──────────────────┐  │
-        │  │  audio_processor.py          │  │
+        │  ┌───────────▼───────────────────┐  │
+        │  │  audio_processor.py           │  │
         │  │  - AudioProcessor class       │  │
         │  │  - Statistics calculation     │  │
         │  │  - Compressor/Limiter effects │  │
         │  │  - Audio file I/O             │  │
-        │  └───────────┬──────────────────┘  │
-        └──────────────┼─────────────────────┘
+        │  └───────────┬───────────────────┘  │
+        └──────────────┼──────────────────────┘
                        │
         ┌──────────────▼──────────────────┐
         │     Audio Processing Layer      │
         │  ┌──────────────────────────┐   │
-        │  │   pydub (Python)          │   │
-        │  │   - Audio manipulation    │   │
-        │  │   - Format conversion     │   │
-        │  │   - Effects processing    │   │
-        │  └──────────┬────────────────┘   │
-        │             │                     │
-        │  ┌──────────▼────────────────┐   │
-        │  │   FFmpeg (Backend)        │   │
-        │  │   - Audio codec support   │   │
-        │  │   - Format decoding       │   │
-        │  │   - Audio encoding        │   │
-        │  └───────────────────────────┘   │
+        │  │   pydub (Python)         │   │
+        │  │   - Audio manipulation   │   │
+        │  │   - Format conversion    │   │
+        │  │   - Effects processing   │   │
+        │  └──────────┬───────────────┘   │
+        │             │                   │
+        │  ┌──────────▼────────────────┐  │
+        │  │   FFmpeg (Backend)        │  │
+        │  │   - Audio codec support   │  │
+        │  │   - Format decoding       │  │
+        │  │   - Audio encoding        │  │
+        │  └───────────────────────────┘  │
         └─────────────────────────────────┘
                        │
         ┌──────────────▼──────────────────┐
-        │    Temporary File Storage        │
-        │  - Uploaded audio files          │
-        │  - Processed output files        │
-        │  - UUID-based naming             │
-        └──────────────────────────────────┘
+        │    Temporary File Storage       │
+        │  - Uploaded audio files         │
+        │  - Processed output files       │
+        │  - UUID-based naming            │
+        └─────────────────────────────────┘
 ```
 
 ## Data Flow
