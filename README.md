@@ -15,6 +15,32 @@ Audio Processing Web Application - A Flask-based web application for processing 
   - **Limiter**: Apply limiting to prevent clipping with customizable threshold and release
 - **Download**: Download processed audio files
 
+## Screenshots
+
+### Upload Page
+![Upload Page](screenshots/01-upload-page.png)
+*The main upload interface with a clean, modern design*
+
+### File Selected
+![File Selected](screenshots/02-file-selected.png)
+*After selecting an audio file for upload*
+
+### Audio Statistics
+![Audio Statistics](screenshots/03-statistics-displayed.png)
+*Detailed audio statistics displayed after upload, including max/min dB levels, duration, sample rate, and channels*
+
+### Compressor Parameters
+![Compressor Parameters](screenshots/04-compressor-parameters.png)
+*Dynamic range compressor with adjustable threshold, ratio, attack, and release parameters*
+
+### Processing Complete
+![Processing Complete](screenshots/05-processing-complete.png)
+*Processing completed successfully with download button available*
+
+### Limiter Parameters
+![Limiter Parameters](screenshots/06-limiter-parameters.png)
+*Audio limiter with threshold and release controls to prevent clipping*
+
 ## Installation
 
 ### Prerequisites
