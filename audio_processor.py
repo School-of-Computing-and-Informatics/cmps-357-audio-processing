@@ -1,5 +1,6 @@
 import os
 import tempfile
+from typing import Optional
 from pydub import AudioSegment
 from pydub.effects import compress_dynamic_range, normalize
 import numpy as np
@@ -83,7 +84,7 @@ class AudioProcessor:
         total_nonsilent_ms = sum(end - start for start, end in nonsilent_ranges)
         return total_nonsilent_ms / 1000.0
     
-    def _extract_segment(self, start_time=None, end_time=None):
+    def _extract_segment(self, start_time: Optional[float] = None, end_time: Optional[float] = None) -> AudioSegment:
         """
         Extract a segment of audio from start_time to end_time.
         
@@ -109,7 +110,7 @@ class AudioProcessor:
         # Extract and return the segment
         return self.audio[start_ms:end_ms]
     
-    def apply_compressor(self, threshold=-20, ratio=4, attack=5, release=50, start_time=None, end_time=None):
+    def apply_compressor(self, threshold: float = -20.0, ratio: float = 4.0, attack: float = 5.0, release: float = 50.0, start_time: Optional[float] = None, end_time: Optional[float] = None) -> str:
         """
         Apply compression to audio.
         
@@ -147,7 +148,7 @@ class AudioProcessor:
         compressed.export(output_path, format='mp3')
         return output_path
     
-    def apply_limiter(self, threshold=-1, release=50, start_time=None, end_time=None):
+    def apply_limiter(self, threshold: float = -1.0, release: float = 50.0, start_time: Optional[float] = None, end_time: Optional[float] = None) -> str:
         """
         Apply limiting to audio (extreme compression with high ratio).
         

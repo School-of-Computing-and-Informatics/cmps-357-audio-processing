@@ -1,7 +1,9 @@
 import os
 import uuid
+from typing import Optional
 from flask import Flask, render_template, request, send_file, jsonify
 from werkzeug.utils import secure_filename
+from werkzeug.datastructures import FileStorage
 import tempfile
 from audio_processor import AudioProcessor
 
@@ -26,17 +28,23 @@ def index():
 def upload_file():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
-    
-    file = request.files['file']
-    
+
+    # Use .get for a typed access and guard against None for type checkers
+    file: Optional[FileStorage] = request.files.get('file')
+    if file is None:
+        return jsonify({'error': 'No file part'}), 400
+
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     
     if not allowed_file(file.filename):
         return jsonify({'error': 'Invalid file type. Only mp3, ac3, and aac files are allowed'}), 400
-    
     try:
-        filename = secure_filename(file.filename)
+        # file.filename can be Optional[str] per type checkers; assert it's a str here
+        filename_raw = file.filename
+        if not isinstance(filename_raw, str):
+            return jsonify({'error': 'Invalid filename'}), 400
+        filename = secure_filename(filename_raw)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
@@ -66,6 +74,10 @@ def upload_file():
 def process_audio():
     try:
         data = request.get_json()
+        # get_json() can return None; guard against that so type-checkers know data is a dict
+        if not data or not isinstance(data, dict):
+            return jsonify({'error': 'Invalid or missing JSON body'}), 400
+
         file_id = data.get('file_id')
         operation = data.get('operation')
         
