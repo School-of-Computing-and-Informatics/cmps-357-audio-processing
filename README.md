@@ -47,24 +47,13 @@ Audio Processing Web Application - A Flask-based web application for processing 
 
 - Python 3.8 or higher
 - FFmpeg (required by pydub for audio processing)
+- Additional system libraries (Linux only)
 
-### Install FFmpeg
+For detailed system requirements and installation instructions for all platforms (Linux, macOS, Windows), see [INSTALL_SYSTEM_REQUIREMENTS.md](INSTALL_SYSTEM_REQUIREMENTS.md).
 
-**Ubuntu/Debian:**
-```bash
-sudo apt-get update
-sudo apt-get install ffmpeg
-```
+### Quick Start
 
-**macOS:**
-```bash
-brew install ffmpeg
-```
-
-**Windows:**
-Download from https://ffmpeg.org/download.html and add to PATH
-
-### Install Python Dependencies
+After installing system requirements, install Python dependencies:
 
 ```bash
 pip install -r requirements.txt
