@@ -71,20 +71,35 @@ class AudioProcessor:
         }
     
     def _calculate_non_silence_duration(self, silence_threshold=-50):
-        """Calculate the duration of non-silent parts of the audio."""
-        # Use pydub's detect_nonsilent to find non-silent chunks
+        """Calculate the duration of non-silent parts of the audio using parallel chunk processing for large files."""
         from pydub.silence import detect_nonsilent
+        import concurrent.futures
+        import math
         
-        # min_silence_len: minimum length of silence to be considered (in ms)
-        # silence_thresh: silence threshold in dBFS
-        nonsilent_ranges = detect_nonsilent(
-            self.audio,
-            min_silence_len=100,  # 100ms minimum silence
-            silence_thresh=silence_threshold
-        )
+        audio_length_ms = len(self.audio)
+        num_workers = min(4, (os.cpu_count() or 2))  # Use up to 4 threads
+        chunk_size_ms = max(10000, audio_length_ms // num_workers)  # At least 10s per chunk
+        chunks = []
+        for i in range(0, audio_length_ms, chunk_size_ms):
+            start = i
+            end = min(i + chunk_size_ms, audio_length_ms)
+            chunks.append(self.audio[start:end])
         
-        # Calculate total non-silent duration
-        total_nonsilent_ms = sum(end - start for start, end in nonsilent_ranges)
+        def process_chunk(chunk):
+            ranges = detect_nonsilent(
+                chunk,
+                min_silence_len=100,
+                silence_thresh=silence_threshold
+            )
+            return sum(end - start for start, end in ranges)
+        
+        total_nonsilent_ms = 0
+        if len(chunks) == 1:
+            total_nonsilent_ms = process_chunk(chunks[0])
+        else:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
+                results = list(executor.map(process_chunk, chunks))
+            total_nonsilent_ms = sum(results)
         return total_nonsilent_ms / 1000.0
     
     def _extract_segment(self, start_time: Optional[float] = None, end_time: Optional[float] = None) -> AudioSegment:
