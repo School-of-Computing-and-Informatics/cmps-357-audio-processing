@@ -5,6 +5,39 @@ from pydub import AudioSegment
 from pydub.effects import compress_dynamic_range, normalize
 import numpy as np
 
+def _process_chunk_for_nonsilence(chunk_bytes, sample_width, frame_rate, channels, silence_threshold):
+    from pydub import AudioSegment
+    from pydub.silence import detect_nonsilent
+    chunk = AudioSegment(
+        data=chunk_bytes,
+        sample_width=sample_width,
+        frame_rate=frame_rate,
+        channels=channels
+    )
+    ranges = detect_nonsilent(
+        chunk,
+        min_silence_len=100,
+        silence_thresh=silence_threshold
+    )
+    return sum(end - start for start, end in ranges)
+
+def _unpack_args_for_nonsilence(args):
+    return _process_chunk_for_nonsilence(*args)
+    from pydub import AudioSegment
+    from pydub.silence import detect_nonsilent
+    chunk = AudioSegment(
+        data=chunk_bytes,
+        sample_width=sample_width,
+        frame_rate=frame_rate,
+        channels=channels
+    )
+    ranges = detect_nonsilent(
+        chunk,
+        min_silence_len=100,
+        silence_thresh=silence_threshold
+    )
+    return sum(end - start for start, end in ranges)
+
 class AudioProcessor:
     """Process audio files and provide statistics and effects."""
     
@@ -75,30 +108,33 @@ class AudioProcessor:
         from pydub.silence import detect_nonsilent
         import concurrent.futures
         import math
-        
+        import os
+
         audio_length_ms = len(self.audio)
-        num_workers = min(4, (os.cpu_count() or 2))  # Use up to 4 threads
+        num_workers = min(4, (os.cpu_count() or 2))  # Use up to 4 processes
         chunk_size_ms = max(10000, audio_length_ms // num_workers)  # At least 10s per chunk
         chunks = []
         for i in range(0, audio_length_ms, chunk_size_ms):
             start = i
             end = min(i + chunk_size_ms, audio_length_ms)
             chunks.append(self.audio[start:end])
-        
-        def process_chunk(chunk):
-            ranges = detect_nonsilent(
-                chunk,
-                min_silence_len=100,
-                silence_thresh=silence_threshold
-            )
-            return sum(end - start for start, end in ranges)
-        
+
         total_nonsilent_ms = 0
         if len(chunks) == 1:
-            total_nonsilent_ms = process_chunk(chunks[0])
+            total_nonsilent_ms = _process_chunk_for_nonsilence(
+                chunks[0].raw_data,
+                chunks[0].sample_width,
+                chunks[0].frame_rate,
+                chunks[0].channels,
+                silence_threshold
+            )
         else:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
-                results = list(executor.map(process_chunk, chunks))
+            with concurrent.futures.ProcessPoolExecutor(max_workers=num_workers) as executor:
+                args = [
+                    (chunk.raw_data, chunk.sample_width, chunk.frame_rate, chunk.channels, silence_threshold)
+                    for chunk in chunks
+                ]
+                results = list(executor.map(_unpack_args_for_nonsilence, args))
             total_nonsilent_ms = sum(results)
         return total_nonsilent_ms / 1000.0
     
