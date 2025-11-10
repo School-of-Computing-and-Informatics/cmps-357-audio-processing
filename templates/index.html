@@ -303,6 +303,120 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Range Slider Styles */
+        .sample-test-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .sample-test-section h4 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .range-slider-container {
+            padding: 30px 20px 20px 20px;
+            position: relative;
+        }
+        
+        .range-slider-wrapper {
+            position: relative;
+            height: 60px;
+        }
+        
+        .range-track {
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: #ddd;
+            border-radius: 4px;
+        }
+        
+        .range-highlight {
+            position: absolute;
+            top: 25px;
+            height: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+        }
+        
+        .range-handle {
+            position: absolute;
+            top: 15px;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            cursor: grab;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+            z-index: 10;
+        }
+        
+        .range-handle:active {
+            cursor: grabbing;
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .range-handle.start-handle {
+            border-color: #667eea;
+        }
+        
+        .range-handle.end-handle {
+            border-color: #764ba2;
+        }
+        
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 45px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .range-values {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .range-value-item {
+            background: #f8f9ff;
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+        }
+        
+        .checkbox-group {
+            margin-bottom: 15px;
+        }
+        
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -346,6 +460,40 @@
                 
                 <div class="parameters" id="parameters"></div>
                 
+                <!-- Sample Test Section -->
+                <div class="sample-test-section">
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="enableSampleTest" />
+                            Enable Sample Test (Process only a portion of the audio)
+                        </label>
+                    </div>
+                    
+                    <div id="sampleTestControls" style="display: none;">
+                        <h4>Select Audio Range</h4>
+                        <div class="range-slider-container">
+                            <div class="range-slider-wrapper">
+                                <div class="range-track"></div>
+                                <div class="range-highlight" id="rangeHighlight"></div>
+                                <div class="range-handle start-handle" id="startHandle"></div>
+                                <div class="range-handle end-handle" id="endHandle"></div>
+                            </div>
+                            <div class="range-labels">
+                                <span>Start</span>
+                                <span>End</span>
+                            </div>
+                            <div class="range-values">
+                                <div class="range-value-item">
+                                    <span id="startTimeDisplay">0.0s</span>
+                                </div>
+                                <div class="range-value-item">
+                                    <span id="endTimeDisplay">0.0s</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <button class="process-btn" id="processBtn" disabled>Apply Processing</button>
             </div>
         </div>
@@ -365,6 +513,9 @@
     
     <script>
         let uploadedFileId = null;
+        let audioDuration = 0;  // Store audio duration in seconds
+        let isDragging = false;
+        let currentHandle = null;
         
         // File input handling
         document.getElementById('audioFile').addEventListener('change', function(e) {
@@ -398,7 +549,9 @@
                 
                 if (data.success) {
                     uploadedFileId = data.file_id;
+                    audioDuration = data.statistics.duration_seconds;
                     displayStatistics(data.statistics);
+                    initializeRangeSlider(audioDuration);
                     document.getElementById('statsSection').style.display = 'block';
                     document.getElementById('processingSection').style.display = 'block';
                 } else {
@@ -480,6 +633,14 @@
                 params.release = parseFloat(document.getElementById('release').value);
             }
             
+            // Add sample test parameters if enabled
+            if (document.getElementById('enableSampleTest').checked) {
+                const startTime = getStartTime();
+                const endTime = getEndTime();
+                params.start_time = startTime;
+                params.end_time = endTime;
+            }
+            
             document.getElementById('loadingProcess').style.display = 'block';
             document.getElementById('downloadSection').style.display = 'none';
             
@@ -546,6 +707,128 @@
             document.querySelector('.container').insertBefore(errorDiv, document.querySelector('.upload-section'));
             setTimeout(() => errorDiv.remove(), 5000);
         }
+        
+        // Range Slider Functions
+        function initializeRangeSlider(duration) {
+            const container = document.querySelector('.range-slider-wrapper');
+            const startHandle = document.getElementById('startHandle');
+            const endHandle = document.getElementById('endHandle');
+            
+            // Initialize positions (start at 0%, end at 100%)
+            startHandle.style.left = '0%';
+            endHandle.style.left = '100%';
+            
+            updateRangeDisplay();
+            
+            // Add event listeners
+            startHandle.addEventListener('mousedown', (e) => handleMouseDown(e, 'start'));
+            endHandle.addEventListener('mousedown', (e) => handleMouseDown(e, 'end'));
+            
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            
+            // Touch support for mobile
+            startHandle.addEventListener('touchstart', (e) => handleTouchStart(e, 'start'));
+            endHandle.addEventListener('touchstart', (e) => handleTouchStart(e, 'end'));
+            
+            document.addEventListener('touchmove', handleTouchMove);
+            document.addEventListener('touchend', handleMouseUp);
+        }
+        
+        function handleMouseDown(e, handle) {
+            e.preventDefault();
+            isDragging = true;
+            currentHandle = handle;
+        }
+        
+        function handleTouchStart(e, handle) {
+            isDragging = true;
+            currentHandle = handle;
+        }
+        
+        function handleMouseMove(e) {
+            if (!isDragging || !currentHandle) return;
+            
+            const container = document.querySelector('.range-slider-wrapper');
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+            
+            updateHandlePosition(percentage);
+        }
+        
+        function handleTouchMove(e) {
+            if (!isDragging || !currentHandle) return;
+            
+            const container = document.querySelector('.range-slider-wrapper');
+            const rect = container.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+            
+            updateHandlePosition(percentage);
+        }
+        
+        function handleMouseUp() {
+            isDragging = false;
+            currentHandle = null;
+        }
+        
+        function updateHandlePosition(percentage) {
+            const startHandle = document.getElementById('startHandle');
+            const endHandle = document.getElementById('endHandle');
+            
+            if (currentHandle === 'start') {
+                const endPos = parseFloat(endHandle.style.left);
+                if (percentage < endPos) {
+                    startHandle.style.left = percentage + '%';
+                }
+            } else if (currentHandle === 'end') {
+                const startPos = parseFloat(startHandle.style.left);
+                if (percentage > startPos) {
+                    endHandle.style.left = percentage + '%';
+                }
+            }
+            
+            updateRangeDisplay();
+        }
+        
+        function updateRangeDisplay() {
+            const startHandle = document.getElementById('startHandle');
+            const endHandle = document.getElementById('endHandle');
+            const highlight = document.getElementById('rangeHighlight');
+            
+            const startPos = parseFloat(startHandle.style.left) || 0;
+            const endPos = parseFloat(endHandle.style.left) || 100;
+            
+            highlight.style.left = startPos + '%';
+            highlight.style.width = (endPos - startPos) + '%';
+            
+            // Update time displays
+            const startTime = getStartTime();
+            const endTime = getEndTime();
+            
+            document.getElementById('startTimeDisplay').textContent = startTime.toFixed(2) + 's';
+            document.getElementById('endTimeDisplay').textContent = endTime.toFixed(2) + 's';
+        }
+        
+        function getStartTime() {
+            const startHandle = document.getElementById('startHandle');
+            const startPos = parseFloat(startHandle.style.left) || 0;
+            return (startPos / 100) * audioDuration;
+        }
+        
+        function getEndTime() {
+            const endHandle = document.getElementById('endHandle');
+            const endPos = parseFloat(endHandle.style.left) || 100;
+            return (endPos / 100) * audioDuration;
+        }
+        
+        // Enable/disable sample test controls
+        document.getElementById('enableSampleTest').addEventListener('change', function() {
+            const controls = document.getElementById('sampleTestControls');
+            controls.style.display = this.checked ? 'block' : 'none';
+        });
     </script>
 </body>
 </html>

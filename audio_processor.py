@@ -1,5 +1,6 @@
 import os
 import tempfile
+from typing import Optional
 from pydub import AudioSegment
 from pydub.effects import compress_dynamic_range, normalize
 import numpy as np
@@ -83,7 +84,33 @@ class AudioProcessor:
         total_nonsilent_ms = sum(end - start for start, end in nonsilent_ranges)
         return total_nonsilent_ms / 1000.0
     
-    def apply_compressor(self, threshold: float = -20.0, ratio: float = 4.0, attack: float = 5.0, release: float = 50.0) -> str:
+    def _extract_segment(self, start_time: Optional[float] = None, end_time: Optional[float] = None) -> AudioSegment:
+        """
+        Extract a segment of audio from start_time to end_time.
+        
+        Args:
+            start_time: Start time in seconds (default: None - from beginning)
+            end_time: End time in seconds (default: None - to end)
+        
+        Returns:
+            AudioSegment object containing the specified segment
+        """
+        # If no times specified, return the full audio
+        if start_time is None and end_time is None:
+            return self.audio
+        
+        # Convert times to milliseconds (pydub uses milliseconds)
+        start_ms = int(start_time * 1000) if start_time is not None else 0
+        end_ms = int(end_time * 1000) if end_time is not None else len(self.audio)
+        
+        # Ensure times are within bounds
+        start_ms = max(0, min(start_ms, len(self.audio)))
+        end_ms = max(start_ms, min(end_ms, len(self.audio)))
+        
+        # Extract and return the segment
+        return self.audio[start_ms:end_ms]
+    
+    def apply_compressor(self, threshold: float = -20.0, ratio: float = 4.0, attack: float = 5.0, release: float = 50.0, start_time: Optional[float] = None, end_time: Optional[float] = None) -> str:
         """
         Apply compression to audio.
         
@@ -92,13 +119,18 @@ class AudioProcessor:
             ratio: Compression ratio (default: 4)
             attack: Attack time in ms (default: 5)
             release: Release time in ms (default: 50)
+            start_time: Start time in seconds for processing (default: None - process from beginning)
+            end_time: End time in seconds for processing (default: None - process to end)
         
         Returns:
             Path to processed audio file
         """
+        # Extract segment if start_time or end_time is specified
+        audio_to_process = self._extract_segment(start_time, end_time)
+        
         # Apply dynamic range compression using pydub
         compressed = compress_dynamic_range(
-            self.audio,
+            audio_to_process,
             threshold=threshold,
             ratio=ratio,
             attack=attack,
@@ -116,21 +148,26 @@ class AudioProcessor:
         compressed.export(output_path, format='mp3')
         return output_path
     
-    def apply_limiter(self, threshold: float = -1.0, release: float = 50.0) -> str:
+    def apply_limiter(self, threshold: float = -1.0, release: float = 50.0, start_time: Optional[float] = None, end_time: Optional[float] = None) -> str:
         """
         Apply limiting to audio (extreme compression with high ratio).
         
         Args:
             threshold: Threshold in dBFS (default: -1)
             release: Release time in ms (default: 50)
+            start_time: Start time in seconds for processing (default: None - process from beginning)
+            end_time: End time in seconds for processing (default: None - process to end)
         
         Returns:
             Path to processed audio file
         """
+        # Extract segment if start_time or end_time is specified
+        audio_to_process = self._extract_segment(start_time, end_time)
+        
         # A limiter is essentially a compressor with a very high ratio
         # We use ratio of 100:1 for limiting
         limited = compress_dynamic_range(
-            self.audio,
+            audio_to_process,
             threshold=threshold,
             ratio=100,
             attack=0.1,  # Very fast attack for limiting
