@@ -42,9 +42,12 @@ class AudioProcessor:
             non_zero_samples = samples[samples != 0]
             if len(non_zero_samples) > 0:
                 min_amplitude = np.abs(non_zero_samples).min()
-                # Convert to dBFS (assuming 16-bit audio)
                 max_possible = 2 ** (self.audio.sample_width * 8 - 1)
-                min_dbfs = 20 * np.log10(min_amplitude / max_possible)
+                ratio = min_amplitude / max_possible
+                if ratio > 0:
+                    min_dbfs = 20 * np.log10(ratio)
+                else:
+                    min_dbfs = None
             else:
                 min_dbfs = -float('inf')
         
@@ -58,7 +61,7 @@ class AudioProcessor:
         
         return {
             'max_dbfs': round(max_dbfs, 2),
-            'min_dbfs': round(min_dbfs, 2) if min_dbfs != -float('inf') else 'N/A',
+            'min_dbfs': round(min_dbfs, 2) if isinstance(min_dbfs, (int, float)) and not np.isnan(min_dbfs) else None,
             'duration_seconds': round(duration_seconds, 2),
             'non_silence_seconds': round(non_silent_duration, 2),
             'silence_threshold_db': silence_threshold,
