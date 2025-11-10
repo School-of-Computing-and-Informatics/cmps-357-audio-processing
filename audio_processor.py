@@ -83,7 +83,7 @@ class AudioProcessor:
         total_nonsilent_ms = sum(end - start for start, end in nonsilent_ranges)
         return total_nonsilent_ms / 1000.0
     
-    def apply_compressor(self, threshold=-20, ratio=4, attack=5, release=50):
+    def apply_compressor(self, threshold: float = -20.0, ratio: float = 4.0, attack: float = 5.0, release: float = 50.0) -> str:
         """
         Apply compression to audio.
         
@@ -116,7 +116,7 @@ class AudioProcessor:
         compressed.export(output_path, format='mp3')
         return output_path
     
-    def apply_limiter(self, threshold=-1, release=50):
+    def apply_limiter(self, threshold: float = -1.0, release: float = 50.0) -> str:
         """
         Apply limiting to audio (extreme compression with high ratio).
         
