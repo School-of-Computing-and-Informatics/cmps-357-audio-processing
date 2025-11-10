@@ -79,19 +79,27 @@ def process_audio():
         
         processor = AudioProcessor(filepath)
         
+        # Extract optional start and end times for sample processing
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        
+        # Convert to float if provided
+        start_time = float(start_time) if start_time is not None else None
+        end_time = float(end_time) if end_time is not None else None
+        
         if operation == 'compressor':
             threshold = float(data.get('threshold', -20))
             ratio = float(data.get('ratio', 4))
             attack = float(data.get('attack', 5))
             release = float(data.get('release', 50))
             
-            output_path = processor.apply_compressor(threshold, ratio, attack, release)
+            output_path = processor.apply_compressor(threshold, ratio, attack, release, start_time, end_time)
         
         elif operation == 'limiter':
             threshold = float(data.get('threshold', -1))
             release = float(data.get('release', 50))
             
-            output_path = processor.apply_limiter(threshold, release)
+            output_path = processor.apply_limiter(threshold, release, start_time, end_time)
         
         else:
             return jsonify({'error': 'Invalid operation'}), 400
