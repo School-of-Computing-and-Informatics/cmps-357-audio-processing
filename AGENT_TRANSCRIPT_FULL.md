@@ -546,7 +546,7 @@ nicholas-g-lipari-phd: Create an agent transcript file (md) with the following. 
 ... see above transcript ...
 ```
 
-GitHub Copilot: Created [TRANSCRIPT_SUMMARY](/cmps-357-audio-processing/AGENT_TRANSCRIPT.md)
+GitHub Copilot: Created [TRANSCRIPT_ABRIDGED](/cmps-357-audio-processing/AGENT_TRANSCRIPT.md)
 
 Created AGENT_TRANSCRIPT.md with a curated, cleaned transcript (excluding unused deadsnakes/PPA steps) plus a final summary and next-improvement suggestions. Let me know if you’d like it reformatted, trimmed, or expanded further.
 
