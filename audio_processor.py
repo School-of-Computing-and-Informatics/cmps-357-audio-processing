@@ -1,9 +1,106 @@
 import os
 import tempfile
-from typing import Optional
+from typing import Optional, Callable, List, Any
 from pydub import AudioSegment
 from pydub.effects import compress_dynamic_range, normalize
 import numpy as np
+import concurrent.futures
+import math
+
+
+class ThreadConfig:
+    """Configuration for multi-threading in audio processing operations."""
+    _instance = None
+    _num_threads = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(ThreadConfig, cls).__new__(cls)
+        return cls._instance
+    
+    @classmethod
+    def set_num_threads(cls, num_threads: Optional[int] = None):
+        """
+        Set the number of threads to use for audio processing.
+        
+        Args:
+            num_threads: Number of threads to use. If None, defaults to half of CPU cores.
+                        Maximum is the number of CPU cores.
+        """
+        cpu_count = os.cpu_count() or 2
+        if num_threads is None:
+            cls._num_threads = max(1, cpu_count // 2)
+        else:
+            cls._num_threads = max(1, min(num_threads, cpu_count))
+    
+    @classmethod
+    def get_num_threads(cls) -> int:
+        """Get the configured number of threads for audio processing."""
+        if cls._num_threads is None:
+            cls.set_num_threads()
+        return cls._num_threads
+    
+    @classmethod
+    def get_max_threads(cls) -> int:
+        """Get the maximum number of threads (CPU cores)."""
+        return os.cpu_count() or 2
+
+
+def _parallel_process_audio_chunks(
+    audio: AudioSegment,
+    process_func: Callable,
+    chunk_processor_func: Callable,
+    min_chunk_size_ms: int = 10000,
+    **kwargs
+) -> Any:
+    """
+    Generic pattern for processing audio in parallel chunks.
+    
+    This function divides audio into chunks and processes them in parallel using
+    the configured number of threads. This pattern should be used for all analysis
+    operations to ensure consistent multi-threading behavior.
+    
+    Args:
+        audio: AudioSegment to process
+        process_func: Function to process a single chunk (runs in worker process)
+        chunk_processor_func: Function to unpack args and call process_func
+        min_chunk_size_ms: Minimum chunk size in milliseconds
+        **kwargs: Additional arguments to pass to process_func
+        
+    Returns:
+        Result depends on the process_func - typically a list of results from each chunk
+    """
+    audio_length_ms = len(audio)
+    num_workers = ThreadConfig.get_num_threads()
+    chunk_size_ms = max(min_chunk_size_ms, audio_length_ms // num_workers)
+    
+    chunks = []
+    for i in range(0, audio_length_ms, chunk_size_ms):
+        start = i
+        end = min(i + chunk_size_ms, audio_length_ms)
+        chunks.append(audio[start:end])
+    
+    # Single chunk - process directly without multiprocessing overhead
+    if len(chunks) == 1:
+        args = (
+            chunks[0].raw_data,
+            chunks[0].sample_width,
+            chunks[0].frame_rate,
+            chunks[0].channels,
+            kwargs
+        )
+        return [chunk_processor_func(args)]
+    
+    # Multiple chunks - use parallel processing
+    with concurrent.futures.ProcessPoolExecutor(max_workers=num_workers) as executor:
+        args_list = [
+            (chunk.raw_data, chunk.sample_width, chunk.frame_rate, chunk.channels, kwargs)
+            for chunk in chunks
+        ]
+        results = list(executor.map(chunk_processor_func, args_list))
+    
+    return results
+
 
 def _process_chunk_for_nonsilence(chunk_bytes, sample_width, frame_rate, channels, silence_threshold):
     from pydub import AudioSegment
@@ -22,21 +119,51 @@ def _process_chunk_for_nonsilence(chunk_bytes, sample_width, frame_rate, channel
     return sum(end - start for start, end in ranges)
 
 def _unpack_args_for_nonsilence(args):
-    return _process_chunk_for_nonsilence(*args)
+    chunk_bytes, sample_width, frame_rate, channels, kwargs = args
+    silence_threshold = kwargs.get('silence_threshold', -50)
+    return _process_chunk_for_nonsilence(chunk_bytes, sample_width, frame_rate, channels, silence_threshold)
+
+
+def _process_chunk_for_max_dbfs(chunk_bytes, sample_width, frame_rate, channels):
+    """Process a chunk to find maximum dBFS."""
     from pydub import AudioSegment
-    from pydub.silence import detect_nonsilent
     chunk = AudioSegment(
         data=chunk_bytes,
         sample_width=sample_width,
         frame_rate=frame_rate,
         channels=channels
     )
-    ranges = detect_nonsilent(
-        chunk,
-        min_silence_len=100,
-        silence_thresh=silence_threshold
+    return chunk.max_dBFS
+
+
+def _unpack_args_for_max_dbfs(args):
+    chunk_bytes, sample_width, frame_rate, channels, kwargs = args
+    return _process_chunk_for_max_dbfs(chunk_bytes, sample_width, frame_rate, channels)
+
+
+def _process_chunk_for_min_dbfs(chunk_bytes, sample_width, frame_rate, channels):
+    """Process a chunk to find minimum non-zero sample for dBFS calculation."""
+    from pydub import AudioSegment
+    import numpy as np
+    
+    chunk = AudioSegment(
+        data=chunk_bytes,
+        sample_width=sample_width,
+        frame_rate=frame_rate,
+        channels=channels
     )
-    return sum(end - start for start, end in ranges)
+    
+    samples = np.array(chunk.get_array_of_samples())
+    non_zero_samples = samples[samples != 0]
+    
+    if len(non_zero_samples) > 0:
+        return np.abs(non_zero_samples).min()
+    return None
+
+
+def _unpack_args_for_min_dbfs(args):
+    chunk_bytes, sample_width, frame_rate, channels, kwargs = args
+    return _process_chunk_for_min_dbfs(chunk_bytes, sample_width, frame_rate, channels)
 
 class AudioProcessor:
     """Process audio files and provide statistics and effects."""
@@ -60,34 +187,17 @@ class AudioProcessor:
             raise ValueError(f"Unsupported file format: {file_extension}")
     
     def get_statistics(self):
-        """Get audio file statistics."""
-        # Get max and min dBFS levels
-        max_dbfs = self.audio.max_dBFS
+        """Get audio file statistics using multi-threaded analysis."""
+        # Get max dBFS using multi-threaded processing
+        max_dbfs = self._calculate_max_dbfs()
         
-        # Calculate RMS (root mean square) as a measure of average level
-        # Convert to numpy array for calculation
-        samples = np.array(self.audio.get_array_of_samples())
-        
-        if len(samples) == 0:
-            min_dbfs = -float('inf')
-        else:
-            # Find minimum non-zero sample to calculate min dBFS
-            non_zero_samples = samples[samples != 0]
-            if len(non_zero_samples) > 0:
-                min_amplitude = np.abs(non_zero_samples).min()
-                max_possible = 2 ** (self.audio.sample_width * 8 - 1)
-                ratio = min_amplitude / max_possible
-                if ratio > 0:
-                    min_dbfs = 20 * np.log10(ratio)
-                else:
-                    min_dbfs = None
-            else:
-                min_dbfs = -float('inf')
+        # Get min dBFS using multi-threaded processing
+        min_dbfs = self._calculate_min_dbfs()
         
         # Get total duration in seconds
         duration_seconds = len(self.audio) / 1000.0
         
-        # Calculate non-silence duration
+        # Calculate non-silence duration using multi-threaded processing
         # Threshold for silence: -50 dBFS (reasonable default)
         silence_threshold = -50
         non_silent_duration = self._calculate_non_silence_duration(silence_threshold)
@@ -103,39 +213,49 @@ class AudioProcessor:
             'sample_width': self.audio.sample_width
         }
     
+    def _calculate_max_dbfs(self):
+        """Calculate maximum dBFS using multi-threaded processing."""
+        results = _parallel_process_audio_chunks(
+            self.audio,
+            _process_chunk_for_max_dbfs,
+            _unpack_args_for_max_dbfs
+        )
+        # Return the maximum dBFS from all chunks
+        return max(results)
+    
+    def _calculate_min_dbfs(self):
+        """Calculate minimum dBFS using multi-threaded processing."""
+        results = _parallel_process_audio_chunks(
+            self.audio,
+            _process_chunk_for_min_dbfs,
+            _unpack_args_for_min_dbfs
+        )
+        
+        # Filter out None values and find minimum amplitude
+        valid_results = [r for r in results if r is not None]
+        
+        if len(valid_results) == 0:
+            return -float('inf')
+        
+        min_amplitude = min(valid_results)
+        max_possible = 2 ** (self.audio.sample_width * 8 - 1)
+        ratio = min_amplitude / max_possible
+        
+        if ratio > 0:
+            return 20 * np.log10(ratio)
+        return None
+    
     def _calculate_non_silence_duration(self, silence_threshold=-50):
-        """Calculate the duration of non-silent parts of the audio using parallel chunk processing for large files."""
-        from pydub.silence import detect_nonsilent
-        import concurrent.futures
-        import math
-        import os
-
-        audio_length_ms = len(self.audio)
-        num_workers = min(4, (os.cpu_count() or 2))  # Use up to 4 processes
-        chunk_size_ms = max(10000, audio_length_ms // num_workers)  # At least 10s per chunk
-        chunks = []
-        for i in range(0, audio_length_ms, chunk_size_ms):
-            start = i
-            end = min(i + chunk_size_ms, audio_length_ms)
-            chunks.append(self.audio[start:end])
-
-        total_nonsilent_ms = 0
-        if len(chunks) == 1:
-            total_nonsilent_ms = _process_chunk_for_nonsilence(
-                chunks[0].raw_data,
-                chunks[0].sample_width,
-                chunks[0].frame_rate,
-                chunks[0].channels,
-                silence_threshold
-            )
-        else:
-            with concurrent.futures.ProcessPoolExecutor(max_workers=num_workers) as executor:
-                args = [
-                    (chunk.raw_data, chunk.sample_width, chunk.frame_rate, chunk.channels, silence_threshold)
-                    for chunk in chunks
-                ]
-                results = list(executor.map(_unpack_args_for_nonsilence, args))
-            total_nonsilent_ms = sum(results)
+        """Calculate the duration of non-silent parts of the audio using parallel chunk processing."""
+        results = _parallel_process_audio_chunks(
+            self.audio,
+            _process_chunk_for_nonsilence,
+            _unpack_args_for_nonsilence,
+            silence_threshold=silence_threshold
+        )
+        
+        # Sum all non-silent durations from chunks
+        total_nonsilent_ms = sum(results)
         return total_nonsilent_ms / 1000.0
     
     def _extract_segment(self, start_time: Optional[float] = None, end_time: Optional[float] = None) -> AudioSegment:

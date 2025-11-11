@@ -123,5 +123,72 @@ def test_audio_processor_extract_segment():
     finally:
         os.unlink(temp_file.name)
 
+def test_thread_config():
+    """Test ThreadConfig class."""
+    from audio_processor import ThreadConfig
+    import os
+    
+    # Test default configuration (half of CPU cores)
+    ThreadConfig.set_num_threads(None)
+    default_threads = ThreadConfig.get_num_threads()
+    max_threads = ThreadConfig.get_max_threads()
+    expected_default = max(1, (os.cpu_count() or 2) // 2)
+    assert default_threads == expected_default
+    assert max_threads == (os.cpu_count() or 2)
+    
+    # Test setting specific number of threads
+    ThreadConfig.set_num_threads(2)
+    assert ThreadConfig.get_num_threads() == 2
+    
+    # Test setting threads above maximum (should be capped)
+    ThreadConfig.set_num_threads(9999)
+    assert ThreadConfig.get_num_threads() == max_threads
+    
+    # Test setting threads below minimum (should be set to 1)
+    ThreadConfig.set_num_threads(0)
+    assert ThreadConfig.get_num_threads() == 1
+
+def test_get_thread_settings(client):
+    """Test getting thread settings."""
+    response = client.get('/settings/threads')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['success'] == True
+    assert 'current_threads' in data
+    assert 'max_threads' in data
+    assert 'default_threads' in data
+    assert data['current_threads'] >= 1
+    assert data['max_threads'] >= 1
+
+def test_set_thread_settings_valid(client):
+    """Test setting valid thread settings."""
+    response = client.post('/settings/threads',
+                          json={'num_threads': 2})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['success'] == True
+    assert data['current_threads'] == 2
+
+def test_set_thread_settings_invalid(client):
+    """Test setting invalid thread settings."""
+    # Test missing num_threads
+    response = client.post('/settings/threads', json={})
+    assert response.status_code == 400
+    
+    # Test invalid type
+    response = client.post('/settings/threads',
+                          json={'num_threads': 'invalid'})
+    assert response.status_code == 400
+    
+    # Test out of range (too high)
+    response = client.post('/settings/threads',
+                          json={'num_threads': 9999})
+    assert response.status_code == 400
+    
+    # Test out of range (too low)
+    response = client.post('/settings/threads',
+                          json={'num_threads': 0})
+    assert response.status_code == 400
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
