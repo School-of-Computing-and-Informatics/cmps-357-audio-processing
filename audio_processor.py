@@ -7,6 +7,10 @@ import numpy as np
 import concurrent.futures
 import math
 
+#TODO: Refactor ThreadConfig to use singleton pattern
+#TODO: Create agent task for refactoring all existing code to use `Type-safety & Pylance guidelines` from `.github/COPILOT_TYPE_SAFETY.md`
+#TODO: Refactor all processing functions to follow parallel processing pattern (see MULTITHREADING_PATTERN.md for details)
+#TODO: Move all import statements to the top of the file
 
 class ThreadConfig:
     """Configuration for multi-threading in audio processing operations."""
