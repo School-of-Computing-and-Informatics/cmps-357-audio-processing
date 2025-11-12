@@ -250,7 +250,6 @@ def get_num_threads(self) -> int:
    * *Response:* Defined use of `Optional`, `typing.cast`, explicit Callable/return types; minimized `Any`.
 
    * Related commits:
-
       - Add type-safety and Pylance guidelines documentation: [Add type-safety and Pylance guidelines documentation (8ef6937)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/8ef6937)
 ```python
 # Before
@@ -263,74 +262,11 @@ def foo(x: Optional[int]) -> int:
    assert x is not None
    return x
 ```
-
-
-3. **Implementing parallelization**
-
-   * *Request:* Example of parallelizing analysis.
-   * *Response:* Refactored `_calculate_non_silence_duration` using `ThreadPoolExecutor` for chunked audio analysis.
-
+4. **Error Uploading Large Files**
+   * *Request:* Following error on the frontent: `Error uploading file: Unexpected token '<', "<!doctype "... is not valid JSON`
+   * *Response:* Added Flask error handlers for RequestEntityTooLarge, HTTPException, and a general 500 handler
    * Related commits:
-
-      - Initial chunked parallel processing refactor: [Optimize non-silence duration calculation using parallel chunk processing for large audio files (e0e85de)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/e0e85de)
-
-```python
-# Before
-nonsilent_ranges = detect_nonsilent(self.audio, ...)
-# After
-for chunk in chunks:
-    ranges = detect_nonsilent(chunk, ...)
-    total_nonsilent_ms += sum(end - start for start, end in ranges)
-```
-
-4. **Performance unchanged**
-
-   * *Request:* Why no improvement with threads?
-   * *Response:* Explained Python’s GIL limits; advised switching to `ProcessPoolExecutor` for true parallelism.
-
-   * Related commits:
-
-      - Multi-threading pattern and configurable threads: [Refactor all analysis to use multi-threading pattern with configurable threads (eb3308a)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/eb3308a)
-
-```python
-# Before
-# Single-threaded analysis
-result = analyze_chunk(chunk)
-
-# After
-with ThreadPoolExecutor(max_workers=num_threads) as executor:
-    results = list(executor.map(process_chunk, chunks))
-```
-
-5. **Refactoring for multiprocessing**
-
-   * *Request:* Apply `ProcessPoolExecutor`.
-   * *Response:* Updated code; improved performance expected for large files.
-
-   * Related commits:
-
-      - Switch to multiprocessing (ProcessPoolExecutor) for non-silence duration: [Enable true multiprocessing for non-silence duration analysis (f645c5f)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/f645c5f)
-
-      - Documentation / session summary update: [Add session outlines for multiprocessing, JSON validation, and type safety improvements (7887452)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/7887452)
-
-```python
-# Before
-def process_chunk(...):
-   ...
-with ProcessPoolExecutor(...) as executor:
-   results = list(executor.map(lambda a: process_chunk(*a), args))  # Not picklable
-
-# After
-def _process_chunk_for_nonsilence(...):
-   ...
-def _unpack_args_for_nonsilence(args):
-   return _process_chunk_for_nonsilence(*args)
-with ProcessPoolExecutor(...) as executor:
-   results = list(executor.map(_unpack_args_for_nonsilence, args))  # Picklable
-```
-Related commits:
-
-- Add error handlers for HTTP exceptions and unexpected errors: [Add error handlers for HTTP exceptions and unexpected errors (cd9619f)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/cd9619f)
+      - Add error handlers for HTTP exceptions and unexpected errors: [Add error handlers for HTTP exceptions and unexpected errors (cd9619f)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/cd9619f)
 ```python
 # Before
 # Flask default error handling (returns HTML)
