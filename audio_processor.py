@@ -38,6 +38,10 @@ class ThreadConfig:
         """Get the configured number of threads for audio processing."""
         if cls._num_threads is None:
             cls.set_num_threads()
+
+        # At this point _num_threads is guaranteed to be set to an int by set_num_threads()
+        # but the class attribute is typed as Optional[int], so help the type checker.
+        assert isinstance(cls._num_threads, int)
         return cls._num_threads
     
     @classmethod
