@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, send_file, jsonify, make_resp
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 import tempfile
-from audio_processor import AudioProcessor, ThreadConfig
+from .audio_processor import AudioProcessor, ThreadConfig
 from werkzeug.exceptions import RequestEntityTooLarge, HTTPException
 
 app = Flask(__name__)

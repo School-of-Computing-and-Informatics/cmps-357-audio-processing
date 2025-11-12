@@ -16,12 +16,18 @@ This is a Flask-based audio processing web application that allows users to uplo
 ## Project Structure
 
 ```
-├── app.py                 # Flask application with routes and handlers
-├── audio_processor.py     # AudioProcessor class for audio operations
-├── templates/
-│   └── index.html        # Single-page web interface
-├── test_app.py           # Unit tests
-├── example_usage.py      # CLI usage example
+├── src/                   # Source code
+│   ├── app.py            # Flask application with routes and handlers
+│   ├── audio_processor.py # AudioProcessor class for audio operations
+│   └── templates/        # Web interface templates
+│       └── index.html
+├── tests/                 # Test files
+│   └── test_app.py       # Unit tests
+├── docs/                  # Documentation files
+├── scripts/               # Utility scripts
+│   ├── example_usage.py  # CLI usage example
+│   └── startup.sh        # Setup and test script
+├── run.py                # Application entry point
 ├── requirements.txt      # Python dependencies
 └── README.md            # User documentation
 ```
