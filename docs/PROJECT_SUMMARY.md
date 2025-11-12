@@ -117,7 +117,7 @@ All security measures implemented and verified:
 
 Run the test suite:
 ```bash
-python -m pytest test_app.py -v
+python -m pytest tests/ -v
 ```
 
 Tests include:
@@ -130,7 +130,7 @@ Tests include:
 
 - **Backend**: Flask 3.0.0
 - **Audio Processing**: pydub 0.25.1 + FFmpeg
-- **Numerical Operations**: NumPy 1.24.3
+- **Numerical Operations**: NumPy 1.26.0+
 - **Security**: Werkzeug 3.0.3
 - **Testing**: pytest 7.4.3
 
@@ -145,7 +145,7 @@ Tests include:
 
 ### Command Line
 ```bash
-python example_usage.py sample.mp3
+python scripts/example_usage.py sample.mp3
 ```
 
 ## 📚 Documentation
