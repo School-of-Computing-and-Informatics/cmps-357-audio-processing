@@ -1,19 +1,46 @@
 import os
 import uuid
 from typing import Optional
-from flask import Flask, render_template, request, send_file, jsonify
+from flask import Flask, render_template, request, send_file, jsonify, make_response
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 import tempfile
-from audio_processor import AudioProcessor
+from audio_processor import AudioProcessor, ThreadConfig
+from werkzeug.exceptions import RequestEntityTooLarge, HTTPException
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size
 app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
 
+# Return JSON for common HTTP errors so frontend JSON parsing doesn't fail when
+# Flask produces an HTML error page (for example 413 Request Entity Too Large).
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_request_entity_too_large(error):
+    return make_response(jsonify({'error': 'File too large'}), 413)
+
+
+@app.errorhandler(HTTPException)
+def handle_http_exception(error: HTTPException):
+    # Return JSON for all HTTPExceptions (404, 400, etc.) as a Response object
+    return make_response(jsonify({'error': error.description}), error.code)
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(error: Exception):
+    # Generic 500 handler that returns JSON instead of HTML
+    print(f"Unhandled exception: {error}")
+    return make_response(jsonify({'error': 'Internal server error'}), 500)
+
+#TODO: Add error reporting enpoint to api for logging errors from audio processing and file handling from the frontend
+
 # Store file mappings in memory (in production, use Redis or database)
 file_storage = {}
+
+# Initialize thread configuration with default (half of CPU cores)
+ThreadConfig.set_num_threads()
 
 ALLOWED_EXTENSIONS = {'mp3', 'ac3', 'aac'}
 
@@ -151,6 +178,53 @@ def download_file(file_id):
         # Log the error for debugging (in production, use proper logging)
         print(f"Error in download_file: {str(e)}")
         return jsonify({'error': 'An error occurred while downloading the file'}), 500
+
+@app.route('/settings/threads', methods=['GET'])
+def get_thread_settings():
+    """Get current thread configuration."""
+    try:
+        return jsonify({
+            'success': True,
+            'current_threads': ThreadConfig.get_num_threads(),
+            'max_threads': ThreadConfig.get_max_threads(),
+            'default_threads': ThreadConfig.get_max_threads() // 2
+        })
+    except Exception as e:
+        print(f"Error in get_thread_settings: {str(e)}")
+        return jsonify({'error': 'An error occurred while getting thread settings'}), 500
+
+@app.route('/settings/threads', methods=['POST'])
+def set_thread_settings():
+    """Update thread configuration."""
+    try:
+        data = request.get_json()
+        if not data or not isinstance(data, dict):
+            return jsonify({'error': 'Invalid or missing JSON body'}), 400
+        
+        num_threads = data.get('num_threads')
+        
+        if num_threads is None:
+            return jsonify({'error': 'num_threads parameter is required'}), 400
+        
+        try:
+            num_threads = int(num_threads)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'num_threads must be a valid integer'}), 400
+        
+        max_threads = ThreadConfig.get_max_threads()
+        if num_threads < 1 or num_threads > max_threads:
+            return jsonify({'error': f'num_threads must be between 1 and {max_threads}'}), 400
+        
+        ThreadConfig.set_num_threads(num_threads)
+        
+        return jsonify({
+            'success': True,
+            'current_threads': ThreadConfig.get_num_threads(),
+            'max_threads': ThreadConfig.get_max_threads()
+        })
+    except Exception as e:
+        print(f"Error in set_thread_settings: {str(e)}")
+        return jsonify({'error': 'An error occurred while setting thread configuration'}), 500
 
 if __name__ == '__main__':
     # Use environment variable to control debug mode

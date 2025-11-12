@@ -417,10 +417,179 @@
             margin-right: 10px;
             cursor: pointer;
         }
+        
+        /* Settings Button */
+        .settings-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .settings-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .modal-header h2 {
+            color: #333;
+            margin: 0;
+            font-size: 1.8em;
+        }
+        
+        .close-btn {
+            font-size: 2em;
+            color: #999;
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: color 0.2s;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .settings-group {
+            margin-bottom: 25px;
+        }
+        
+        .settings-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .settings-info {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0ff;
+        }
+        
+        .settings-info p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .thread-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .thread-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .thread-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .thread-value {
+            text-align: center;
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+            margin: 15px 0;
+        }
+        
+        .save-settings-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        
+        .save-settings-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <div style="text-align: right; margin-bottom: 10px;">
+            <button class="settings-btn" id="settingsBtn">⚙️ Settings</button>
+        </div>
         <h1>🎵 Audio Processing</h1>
         <p class="subtitle">Upload and process your audio files with professional effects</p>
         
@@ -508,6 +677,34 @@
             <h3>✅ Processing Complete!</h3>
             <p style="margin: 20px 0;">Your processed audio file is ready for download.</p>
             <a class="download-btn" id="downloadBtn">Download Processed Audio</a>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Processing Settings</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            
+            <div class="settings-info">
+                <p><strong>System Information:</strong></p>
+                <p>Maximum threads (CPU cores): <span id="maxThreads">-</span></p>
+                <p>Default threads: <span id="defaultThreads">-</span></p>
+                <p>Current setting: <span id="currentThreadsSetting">-</span></p>
+            </div>
+            
+            <div class="settings-group">
+                <label for="threadSlider">Number of Processing Threads:</label>
+                <div class="thread-value" id="threadValue">2</div>
+                <input type="range" id="threadSlider" class="thread-slider" min="1" max="4" value="2" step="1">
+                <p style="text-align: center; color: #666; margin-top: 10px; font-size: 0.9em;">
+                    More threads = faster processing (for large files)
+                </p>
+            </div>
+            
+            <button class="save-settings-btn" id="saveSettingsBtn">Save Settings</button>
         </div>
     </div>
     
@@ -828,6 +1025,97 @@
         document.getElementById('enableSampleTest').addEventListener('change', function() {
             const controls = document.getElementById('sampleTestControls');
             controls.style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // Settings Modal Functions
+        const settingsModal = document.getElementById('settingsModal');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const threadSlider = document.getElementById('threadSlider');
+        const threadValue = document.getElementById('threadValue');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        
+        // Load settings on page load
+        loadThreadSettings();
+        
+        // Open settings modal
+        settingsBtn.addEventListener('click', function() {
+            loadThreadSettings();
+            settingsModal.style.display = 'block';
+        });
+        
+        // Close modal
+        closeModalBtn.addEventListener('click', function() {
+            settingsModal.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+        });
+        
+        // Update thread value display
+        threadSlider.addEventListener('input', function() {
+            threadValue.textContent = this.value;
+        });
+        
+        // Load thread settings from server
+        async function loadThreadSettings() {
+            try {
+                const response = await fetch('/settings/threads');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('maxThreads').textContent = data.max_threads;
+                    document.getElementById('defaultThreads').textContent = data.default_threads;
+                    document.getElementById('currentThreadsSetting').textContent = data.current_threads;
+                    
+                    threadSlider.max = data.max_threads;
+                    threadSlider.value = data.current_threads;
+                    threadValue.textContent = data.current_threads;
+                }
+            } catch (error) {
+                console.error('Error loading thread settings:', error);
+                showError('Error loading settings: ' + error.message);
+            }
+        }
+        
+        // Save thread settings
+        saveSettingsBtn.addEventListener('click', async function() {
+            const numThreads = parseInt(threadSlider.value);
+            
+            try {
+                const response = await fetch('/settings/threads', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ num_threads: numThreads })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show success message
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'success-message';
+                    successDiv.textContent = `Settings saved! Using ${numThreads} thread(s) for processing.`;
+                    document.querySelector('.container').insertBefore(successDiv, document.querySelector('.container').firstChild);
+                    setTimeout(() => successDiv.remove(), 3000);
+                    
+                    // Close modal
+                    settingsModal.style.display = 'none';
+                    
+                    // Reload settings to update display
+                    loadThreadSettings();
+                } else {
+                    showError(data.error || 'Failed to save settings');
+                }
+            } catch (error) {
+                showError('Error saving settings: ' + error.message);
+            }
         });
     </script>
 </body>
