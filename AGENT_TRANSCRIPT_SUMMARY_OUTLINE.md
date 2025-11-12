@@ -97,3 +97,197 @@ A new file `INSTALL_SYSTEM_REQUIREMENTS.md` documents system packages:
 - Extend testing and CI automation using the same environment setup.
 
 ---
+
+### Session 2 — Multiprocessing and JSON Validation (11/10/2025)
+
+**Request–Response Outline**
+
+1. **Invalid JSON error (`NaN` in `min_dbfs`)**
+
+   * *Request:* Fix “Unexpected token 'N'” upload error.
+   * *Response:* Identified backend returning `NaN` (invalid JSON). Replaced with `None`, added safe handling in statistics calculation.
+   * Related commits:
+      - Fix for NaN `min_dbfs`: [Fix min_dbfs calculation to handle zero samples and NaN values (d345717)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/d345717)
+```python
+# Before
+min_dbfs = 20 * np.log10(min_amplitude / max_possible)
+# Could return NaN if min_amplitude == 0
+
+# After
+ratio = min_amplitude / max_possible
+if ratio > 0:
+    min_dbfs = 20 * np.log10(ratio)
+else:
+    min_dbfs = None
+```
+
+  3. **Implementing parallelization**
+
+     * *Request:* Example of parallelizing analysis.
+     * *Response:* Refactored `_calculate_non_silence_duration` using `ThreadPoolExecutor` for chunked audio analysis.
+
+     * Related commits:
+
+        - Initial chunked parallel processing refactor: [Optimize non-silence duration calculation using parallel chunk processing for large audio files (e0e85de)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/e0e85de)
+
+```python
+# Before
+nonsilent_ranges = detect_nonsilent(self.audio, ...)
+# After
+for chunk in chunks:
+    ranges = detect_nonsilent(chunk, ...)
+    total_nonsilent_ms += sum(end - start for start, end in ranges)
+```
+
+  4. **Performance unchanged**
+
+     * *Request:* Why no improvement with threads?
+     * *Response:* Explained Python’s GIL limits; advised switching to `ProcessPoolExecutor` for true parallelism.
+
+     * Related commits:
+
+        - Multi-threading pattern and configurable threads: [Refactor all analysis to use multi-threading pattern with configurable threads (eb3308a)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/eb3308a)
+
+```python
+# Before
+# Single-threaded analysis
+result = analyze_chunk(chunk)
+
+# After
+with ThreadPoolExecutor(max_workers=num_threads) as executor:
+    results = list(executor.map(process_chunk, chunks))
+```
+
+  5. **Refactoring for multiprocessing**
+
+     * *Request:* Apply `ProcessPoolExecutor`.
+     * *Response:* Updated code; improved performance expected for large files.
+
+     * Related commits:
+
+        - Switch to multiprocessing (ProcessPoolExecutor) for non-silence duration: [Enable true multiprocessing for non-silence duration analysis (f645c5f)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/f645c5f)
+
+```python
+# Before
+def process_chunk(...):
+   ...
+with ProcessPoolExecutor(...) as executor:
+   results = list(executor.map(lambda a: process_chunk(*a), args))  # Not picklable
+
+# After
+def _process_chunk_for_nonsilence(...):
+   ...
+def _unpack_args_for_nonsilence(args):
+   return _process_chunk_for_nonsilence(*args)
+with ProcessPoolExecutor(...) as executor:
+   results = list(executor.map(_unpack_args_for_nonsilence, args))  # Picklable
+```
+
+6. **Pickling and argument errors**
+
+   * *Request:* Fix pickling and argument unpacking errors.
+   * *Response:* Moved worker/unpacker functions to module scope, replaced lambdas, and corrected tuple unpacking.
+
+7. **Final stabilization**
+
+   * *Request:* Summarize all multiprocessing fixes.
+   * *Response:* Provided commit message summarizing: switched to processes, resolved GIL, pickling, and argument issues, verified faster analysis.
+
+---
+
+### Session 3 — Pylance Type Safety and JSON Error Handling (11/12/2025)
+
+**Request–Response Outline**
+
+
+1. **Type-safety fixes in `app.py` and `audio_processor.py`**
+
+   * *Request:* Fix Pylance errors at specific lines.
+   * *Response:* Added typing imports, Optional guards, and float type hints; corrected status-code literal.
+
+   * Related commits:
+
+      - Enhance type safety in audio processing and file upload functions: [Enhance type safety in audio processing and file upload functions (27ece99)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/27ece99)
+```python
+# Before
+def upload_file():
+   ...
+   result = some_func()  # No type hints, missing Optional guards
+
+# After
+from typing import Optional
+def upload_file() -> Optional[dict]:
+   ...
+   result: Optional[dict] = some_func()
+   if result is not None:
+      ...
+```
+
+
+2. **`get_num_threads` return type issue**
+
+   * *Request:* Fix `int | None` mismatch.
+   * *Response:* Used `assert` to guarantee `int` return, satisfying type checker.
+
+   * Related commits:
+
+      - Ensure _num_threads is an int after configuration in ThreadConfig: [Ensure _num_threads is an int after configuration in ThreadConfig (2a4303a)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/2a4303a)
+```python
+# Before
+def get_num_threads(self) -> int:
+   return self._num_threads  # could be None
+
+# After
+def get_num_threads(self) -> int:
+   assert self._num_threads is not None
+   return self._num_threads
+```
+
+
+3. **Consistent style for type checks**
+
+   * *Request:* Suggest consistent Pylance-friendly conventions.
+   * *Response:* Defined use of `Optional`, `typing.cast`, explicit Callable/return types; minimized `Any`.
+
+   * Related commits:
+      - Add type-safety and Pylance guidelines documentation: [Add type-safety and Pylance guidelines documentation (8ef6937)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/8ef6937)
+```python
+# Before
+def foo(x):
+   return x
+
+# After
+from typing import Optional
+def foo(x: Optional[int]) -> int:
+   assert x is not None
+   return x
+```
+4. **Error Uploading Large Files**
+   * *Request:* Following error on the frontent: `Error uploading file: Unexpected token '<', "<!doctype "... is not valid JSON`
+   * *Response:* Added Flask error handlers for RequestEntityTooLarge, HTTPException, and a general 500 handler
+   * Related commits:
+      - Add error handlers for HTTP exceptions and unexpected errors: [Add error handlers for HTTP exceptions and unexpected errors (cd9619f)](https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing/commit/cd9619f)
+```python
+# Before
+# Flask default error handling (returns HTML)
+
+# After
+@app.errorhandler(413)
+def handle_413(e):
+   return jsonify({'error': 'File too large'}), 413
+@app.errorhandler(400)
+def handle_400(e):
+   return jsonify({'error': 'Bad request'}), 400
+@app.errorhandler(500)
+def handle_500(e):
+   return jsonify({'error': 'Internal server error'}), 500
+```
+
+---
+
+**Lecture Use**
+
+* **Theme 1:** Type safety and maintainable typing in Python projects.
+* **Theme 2:** JSON validity and backend–frontend communication standards.
+* **Theme 3:** Limits of threading (GIL) and transition to multiprocessing.
+* **Theme 4:** Engineering workflow: debugging → refactoring → documenting → verifying.

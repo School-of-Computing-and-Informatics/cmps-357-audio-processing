@@ -50,6 +50,98 @@ This is a Flask-based audio processing web application that allows users to uplo
 - Export processed audio as MP3 format
 - Store files in system temp directory using `tempfile.gettempdir()`
 
+### Multi-threading Pattern for Audio Analysis
+
+**All audio analysis operations MUST use the standard multi-threading pattern to ensure consistent performance.**
+
+#### ThreadConfig Singleton
+
+Use `ThreadConfig` to manage thread count:
+
+```python
+from audio_processor import ThreadConfig
+
+# Get current configuration
+num_threads = ThreadConfig.get_num_threads()  # Default: half of CPU cores
+max_threads = ThreadConfig.get_max_threads()   # Maximum: CPU cores
+
+# Set specific number of threads
+ThreadConfig.set_num_threads(4)
+```
+
+#### Standard Pattern for New Analysis Operations
+
+Follow this three-step pattern when adding any new audio analysis operation:
+
+**Step 1: Define Chunk Processor Function**
+
+```python
+def _process_chunk_for_my_operation(chunk_bytes, sample_width, frame_rate, channels):
+    """Process a single chunk of audio (runs in worker process)."""
+    from pydub import AudioSegment
+    
+    # Reconstruct AudioSegment from raw data
+    chunk = AudioSegment(
+        data=chunk_bytes,
+        sample_width=sample_width,
+        frame_rate=frame_rate,
+        channels=channels
+    )
+    
+    # Perform your analysis and return result
+    result = analyze_chunk(chunk)
+    return result
+```
+
+**Step 2: Define Unpacker Function**
+
+```python
+def _unpack_args_for_my_operation(args):
+    """Unpack arguments and call chunk processor."""
+    chunk_bytes, sample_width, frame_rate, channels, kwargs = args
+    
+    # Extract any optional parameters from kwargs
+    threshold = kwargs.get('threshold', -50)
+    
+    return _process_chunk_for_my_operation(
+        chunk_bytes, sample_width, frame_rate, channels
+    )
+```
+
+**Step 3: Add Method to AudioProcessor**
+
+```python
+def _calculate_my_metric(self, threshold=-50):
+    """Calculate my_metric using multi-threaded processing."""
+    results = _parallel_process_audio_chunks(
+        self.audio,
+        _process_chunk_for_my_operation,
+        _unpack_args_for_my_operation,
+        threshold=threshold
+    )
+    
+    # Aggregate results appropriately:
+    # - Sum: return sum(results)
+    # - Max: return max(results)
+    # - Average: return sum(results) / len(results)
+    return aggregate(results)
+```
+
+#### Current Multi-threaded Operations
+
+- `_calculate_max_dbfs()` - Finds maximum dBFS, aggregates via `max()`
+- `_calculate_min_dbfs()` - Finds minimum amplitude, converts to dBFS
+- `_calculate_non_silence_duration()` - Sums non-silent durations from chunks
+
+#### Why This Matters
+
+- **Consistency**: All operations use the same threading mechanism
+- **Configurability**: Users can adjust threads via Settings UI (`GET/POST /settings/threads`)
+- **Performance**: Large files benefit from parallel processing
+- **Future-proof**: New operations automatically respect thread configuration
+
+See `MULTITHREADING_PATTERN.md` for complete documentation.
+
 ### Security Best Practices
 
 1. **File Validation**: Only accept `.mp3`, `.aac`, `.ac3` extensions
@@ -60,6 +152,16 @@ This is a Flask-based audio processing web application that allows users to uplo
 6. **Generic Error Messages**: Don't leak implementation details in error responses
 
 ## Common Tasks
+
+### Adding a New Audio Analysis Operation
+
+**IMPORTANT**: All audio analysis operations (calculating statistics, detecting features, etc.) must use the multi-threading pattern described above.
+
+1. Define chunk processor function: `_process_chunk_for_operation()`
+2. Define unpacker function: `_unpack_args_for_operation()`
+3. Add method to `AudioProcessor` using `_parallel_process_audio_chunks()`
+4. Write unit tests in `test_app.py`
+5. If exposing via API, add route handler in `app.py`
 
 ### Adding a New Audio Effect
 
@@ -146,6 +248,16 @@ See `requirements.txt` - install with `pip install -r requirements.txt`
 ### GET /download/<file_id>
 - Download processed audio file
 - Returns: Audio file as attachment
+
+### GET /settings/threads
+- Get current thread configuration
+- Returns: `{current_threads, max_threads, default_threads}`
+
+### POST /settings/threads
+- Update thread configuration
+- Body: `{num_threads}`
+- Validates: `1 <= num_threads <= max_threads` (CPU cores)
+- Returns: `{current_threads, max_threads}` or error
 
 ## Audio Statistics
 
