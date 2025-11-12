@@ -12,6 +12,8 @@ app.secret_key = os.urandom(24)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size
 app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
 
+#TODO: Add error reporting enpoint to api for logging errors from audio processing and file handling from the frontend
+
 # Store file mappings in memory (in production, use Redis or database)
 file_storage = {}
 
