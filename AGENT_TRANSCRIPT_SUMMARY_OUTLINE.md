@@ -97,3 +97,92 @@ A new file `INSTALL_SYSTEM_REQUIREMENTS.md` documents system packages:
 - Extend testing and CI automation using the same environment setup.
 
 ---
+
+### Session 2 — Multiprocessing and JSON Validation (11/10/2025)
+
+**Request–Response Outline**
+
+1. **Invalid JSON error (`NaN` in `min_dbfs`)**
+
+   * *Request:* Fix “Unexpected token 'N'” upload error.
+   * *Response:* Identified backend returning `NaN` (invalid JSON). Replaced with `None`, added safe handling in statistics calculation.
+
+2. **Parallel performance question**
+
+   * *Request:* Could large-file analysis use multiple cores?
+   * *Response:* Explained NumPy’s partial multithreading, recommended explicit multiprocessing for CPU-bound operations.
+
+3. **Implementing parallelization**
+
+   * *Request:* Example of parallelizing analysis.
+   * *Response:* Refactored `_calculate_non_silence_duration` using `ThreadPoolExecutor` for chunked audio analysis.
+
+4. **Performance unchanged**
+
+   * *Request:* Why no improvement with threads?
+   * *Response:* Explained Python’s GIL limits; advised switching to `ProcessPoolExecutor` for true parallelism.
+
+5. **Refactoring for multiprocessing**
+
+   * *Request:* Apply `ProcessPoolExecutor`.
+   * *Response:* Updated code; improved performance expected for large files.
+
+6. **Pickling and argument errors**
+
+   * *Request:* Fix pickling and argument unpacking errors.
+   * *Response:* Moved worker/unpacker functions to module scope, replaced lambdas, and corrected tuple unpacking.
+
+7. **Final stabilization**
+
+   * *Request:* Summarize all multiprocessing fixes.
+   * *Response:* Provided commit message summarizing: switched to processes, resolved GIL, pickling, and argument issues, verified faster analysis.
+
+---
+
+### Session 3 — Pylance Type Safety and JSON Error Handling (11/12/2025)
+
+**Request–Response Outline**
+
+1. **Type-safety fixes in `app.py` and `audio_processor.py`**
+
+   * *Request:* Fix Pylance errors at specific lines.
+   * *Response:* Added typing imports, Optional guards, and float type hints; corrected status-code literal.
+
+2. **`get_num_threads` return type issue**
+
+   * *Request:* Fix `int | None` mismatch.
+   * *Response:* Used `assert` to guarantee `int` return, satisfying type checker.
+
+3. **Consistent style for type checks**
+
+   * *Request:* Suggest consistent Pylance-friendly conventions.
+   * *Response:* Defined use of `Optional`, `typing.cast`, explicit Callable/return types; minimized `Any`.
+
+4. **Copilot documentation**
+
+   * *Request:* Add style guide for contributors.
+   * *Response:* Created `COPILOT_TYPE_SAFETY.md` with principles, patterns, and examples.
+
+5. **Compressor parallelization inquiry**
+
+   * *Request:* Is compressor parallelized?
+   * *Response:* Explained it runs single-threaded; provided example refactor using `_parallel_process_audio_chunks`.
+
+6. **Global vs class-level worker functions**
+
+   * *Request:* Why `_process...` helpers are global.
+   * *Response:* Clarified ProcessPoolExecutor requires top-level picklable callables.
+
+7. **Frontend JSON parse error**
+
+   * *Request:* “Unexpected token '<'” error from upload.
+   * *Response:* Explained Flask returned HTML error pages; added JSON error handlers for 413, 400, 500 responses.
+
+---
+
+**Lecture Use**
+
+* **Theme 1:** Type safety and maintainable typing in Python projects.
+* **Theme 2:** JSON validity and backend–frontend communication standards.
+* **Theme 3:** Limits of threading (GIL) and transition to multiprocessing.
+* **Theme 4:** Engineering workflow: debugging → refactoring → documenting → verifying.
