@@ -12,7 +12,11 @@ Example:
 
 import sys
 import os
-from audio_processor import AudioProcessor
+
+# Add parent directory to path so we can import from src
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.audio_processor import AudioProcessor
 
 def main():
     if len(sys.argv) < 2:

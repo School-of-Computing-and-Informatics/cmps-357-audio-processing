@@ -132,15 +132,28 @@ Returns file → Browser downloads
 
 ```
 cmps-357-audio-processing/
-├── app.py                  # Flask application (routes, handlers)
-├── audio_processor.py      # Audio processing logic
-├── requirements.txt        # Python dependencies
-├── test_app.py            # Unit tests
+├── src/                    # Source code
+│   ├── app.py             # Flask application (routes, handlers)
+│   ├── audio_processor.py # Audio processing logic
+│   └── templates/         # Web interface templates
+│       └── index.html
+├── tests/                  # Test files
+│   └── test_app.py        # Unit tests
+├── docs/                   # Documentation
+│   ├── ARCHITECTURE.md
+│   ├── INSTALL_SYSTEM_REQUIREMENTS.md
+│   ├── MULTITHREADING_PATTERN.md
+│   ├── TODO.md
+│   └── ...
+├── scripts/                # Utility scripts
+│   ├── example_usage.py   # CLI usage example
+│   └── startup.sh         # Setup and test script
+├── screenshots/            # UI screenshots
+├── run.py                 # Application entry point
+├── requirements.txt       # Python dependencies
 ├── .env.example           # Environment variable template
-├── README.md              # Documentation
-├── .gitignore             # Git ignore rules
-└── templates/
-    └── index.html         # Web interface
+├── README.md              # Main documentation
+└── .gitignore             # Git ignore rules
 ```
 
 ## Supported Audio Formats

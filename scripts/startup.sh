@@ -35,10 +35,10 @@ else
 fi
 
 # 5. Run the test suite
-if [[ -f "test_app.py" ]]; then
+if [[ -f "tests/test_app.py" ]]; then
     echo "Running test suite..."
-    python -m pytest test_app.py -v || python test_app.py
+    python -m pytest tests/test_app.py -v || python tests/test_app.py
 else
-    echo "test_app.py not found. Exiting."
+    echo "tests/test_app.py not found. Exiting."
     exit 1
 fi
