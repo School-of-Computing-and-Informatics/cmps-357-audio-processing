@@ -64,13 +64,13 @@ pip install -r requirements.txt
 Run the test suite:
 
 ```bash
-python -m pytest test_app.py -v
+python -m pytest tests/test_app.py -v
 ```
 
-Or simply:
+Or to run all tests:
 
 ```bash
-python test_app.py
+python -m pytest tests/ -v
 ```
 
 ## Usage
@@ -78,14 +78,19 @@ python test_app.py
 ### Running the Application
 
 ```bash
-python app.py
+python run.py
+```
+
+Or directly:
+```bash
+python -m src.app
 ```
 
 The application will start on `http://localhost:5000`
 
 **For development with debug mode:**
 ```bash
-FLASK_DEBUG=true python app.py
+FLASK_DEBUG=true python run.py
 ```
 
 **Note:** Debug mode should never be enabled in production environments as it allows arbitrary code execution.
@@ -105,7 +110,7 @@ FLASK_DEBUG=true python app.py
 You can also use the AudioProcessor class directly from Python:
 
 ```bash
-python example_usage.py path/to/audio.mp3
+python scripts/example_usage.py path/to/audio.mp3
 ```
 
 This will:
@@ -129,12 +134,26 @@ This will:
 
 ```
 .
-├── app.py                 # Flask application and routes
-├── audio_processor.py     # Audio processing logic
-├── requirements.txt       # Python dependencies
-├── templates/
-│   └── index.html        # Web interface
-└── README.md             # This file
+├── src/                   # Source code
+│   ├── app.py            # Flask application and routes
+│   ├── audio_processor.py # Audio processing logic
+│   └── templates/        # Web interface templates
+│       └── index.html
+├── tests/                 # Test files
+│   └── test_app.py       # Unit tests
+├── docs/                  # Documentation
+│   ├── ARCHITECTURE.md
+│   ├── INSTALL_SYSTEM_REQUIREMENTS.md
+│   ├── MULTITHREADING_PATTERN.md
+│   ├── TODO.md
+│   └── ...
+├── scripts/               # Utility scripts
+│   ├── example_usage.py  # CLI usage example
+│   └── startup.sh        # Setup and test script
+├── screenshots/           # UI screenshots
+├── run.py                # Application entry point
+├── requirements.txt      # Python dependencies
+└── README.md            # This file
 ```
 
 ## Technical Details
