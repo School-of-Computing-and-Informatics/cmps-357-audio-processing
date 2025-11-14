@@ -6,8 +6,8 @@ Thank you for considering contributing to this project! This document provides g
 
 ### Prerequisites
 
-1. **Python 3.8+** (Python 3.12 recommended)
-2. **FFmpeg** - Required for audio processing
+1. **Docker** (recommended for quick setup) OR
+2. **Python 3.8+** (Python 3.12 recommended) + **FFmpeg**
    - Ubuntu/Debian: `sudo apt-get install ffmpeg`
    - macOS: `brew install ffmpeg`
    - Windows: Download from [ffmpeg.org](https://ffmpeg.org)
@@ -16,6 +16,39 @@ Thank you for considering contributing to this project! This document provides g
 For detailed system requirements, see [docs/INSTALL_SYSTEM_REQUIREMENTS.md](docs/INSTALL_SYSTEM_REQUIREMENTS.md).
 
 ### Setting Up Development Environment
+
+#### Option 1: Using Docker (Recommended)
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/School-of-Computing-and-Informatics/cmps-357-audio-processing.git
+   cd cmps-357-audio-processing
+   ```
+
+2. **Build and run with Docker Compose:**
+   ```bash
+   docker compose up --build
+   ```
+
+   The application will be available at `http://localhost:5000`
+
+3. **Run tests in Docker:**
+   ```bash
+   # Run tests in a new container
+   docker compose run --rm audio_app python -m pytest tests/ -v
+   ```
+
+4. **Access container shell for debugging:**
+   ```bash
+   docker compose exec audio_app /bin/bash
+   ```
+
+**Docker Development Tips:**
+- The source code is mounted as a volume, so changes are reflected immediately
+- Use `docker compose logs -f` to view application logs
+- Use `docker compose restart` to restart after configuration changes
+
+#### Option 2: Local Development Environment
 
 1. **Clone the repository:**
    ```bash

@@ -43,15 +43,54 @@ Audio Processing Web Application - A Flask-based web application for processing 
 
 ## Installation
 
-### Prerequisites
+### Option 1: Docker (Recommended)
+
+The easiest way to run this application is using Docker, which handles all dependencies automatically.
+
+#### Using Docker Compose (Preferred)
+
+```bash
+# Build and start the application
+docker compose up --build
+
+# Or run in detached mode (background)
+docker compose up -d --build
+
+# Stop the application
+docker compose down
+```
+
+#### Using Docker Commands Directly
+
+If you prefer not to use Docker Compose:
+
+```bash
+# Build the image
+docker build -t audio-processor .
+
+# Run the container
+docker run -d -p 5000:5000 --name audio-processor audio-processor
+
+# Stop the container
+docker stop audio-processor
+
+# Remove the container
+docker rm audio-processor
+```
+
+The application will be available at `http://localhost:5000`
+
+### Option 2: Local Installation
+
+#### Prerequisites
 
 - Python 3.8 or higher
 - FFmpeg (required by pydub for audio processing)
 - Additional system libraries (Linux only)
 
-For detailed system requirements and installation instructions for all platforms (Linux, macOS, Windows), see [INSTALL_SYSTEM_REQUIREMENTS.md](INSTALL_SYSTEM_REQUIREMENTS.md).
+For detailed system requirements and installation instructions for all platforms (Linux, macOS, Windows), see [INSTALL_SYSTEM_REQUIREMENTS.md](docs/INSTALL_SYSTEM_REQUIREMENTS.md).
 
-### Quick Start
+#### Quick Start
 
 After installing system requirements, install Python dependencies:
 
@@ -76,6 +115,22 @@ python -m pytest tests/ -v
 ## Usage
 
 ### Running the Application
+
+#### With Docker (Recommended)
+
+If you installed using Docker, the application is already running after `docker compose up`.
+
+To view logs:
+```bash
+docker compose logs -f
+```
+
+To restart:
+```bash
+docker compose restart
+```
+
+#### Without Docker
 
 ```bash
 python run.py
