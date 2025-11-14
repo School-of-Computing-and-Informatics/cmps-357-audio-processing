@@ -1,5 +1,13 @@
 # Docker on Windows — Quick Setup Notes
 
+> **📌 DEPRECATED**: This document has been superseded by the comprehensive [DOCKER.md](DOCKER.md) guide.
+> 
+> Please refer to [DOCKER.md](DOCKER.md) for up-to-date Docker installation instructions for Windows, macOS, and Linux, including detailed Windows/WSL2 setup and troubleshooting.
+
+---
+
+**Legacy documentation preserved below for reference:**
+
 This document summarizes the recommended steps used in this repo to get Docker Desktop + WSL2 working on Windows. It also explains the `wsl --install --no-distribution` prompt and troubleshooting tips.
 
 ## Quick recommended flow (Windows 10/11)
