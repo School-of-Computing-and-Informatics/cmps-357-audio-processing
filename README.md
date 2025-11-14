@@ -47,38 +47,26 @@ Audio Processing Web Application - A Flask-based web application for processing 
 
 The easiest way to run this application is using Docker, which handles all dependencies automatically.
 
-#### Using Docker Compose (Preferred)
-
+**Quick Start:**
 ```bash
-# Build and start the application
 docker compose up --build
+```
 
-# Or run in detached mode (background)
+The application will be available at `http://localhost:5000`
+
+**For detailed Docker installation instructions, troubleshooting, and OS-specific setup guides (Windows, macOS, Linux), see [docs/DOCKER.md](docs/DOCKER.md).**
+
+**Common Docker commands:**
+```bash
+# Start in background
 docker compose up -d --build
+
+# View logs
+docker compose logs -f
 
 # Stop the application
 docker compose down
 ```
-
-#### Using Docker Commands Directly
-
-If you prefer not to use Docker Compose:
-
-```bash
-# Build the image
-docker build -t audio-processor .
-
-# Run the container
-docker run -d -p 5000:5000 --name audio-processor audio-processor
-
-# Stop the container
-docker stop audio-processor
-
-# Remove the container
-docker rm audio-processor
-```
-
-The application will be available at `http://localhost:5000`
 
 ### Option 2: Local Installation
 
@@ -118,17 +106,7 @@ python -m pytest tests/ -v
 
 #### With Docker (Recommended)
 
-If you installed using Docker, the application is already running after `docker compose up`.
-
-To view logs:
-```bash
-docker compose logs -f
-```
-
-To restart:
-```bash
-docker compose restart
-```
+If you installed using Docker, the application is already running after `docker compose up`. For more Docker commands and management options, see [docs/DOCKER.md](docs/DOCKER.md).
 
 #### Without Docker
 

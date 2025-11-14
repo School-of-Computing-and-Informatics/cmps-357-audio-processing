@@ -13,7 +13,9 @@ Thank you for considering contributing to this project! This document provides g
    - Windows: Download from [ffmpeg.org](https://ffmpeg.org)
 3. **Git** for version control
 
-For detailed system requirements, see [docs/INSTALL_SYSTEM_REQUIREMENTS.md](docs/INSTALL_SYSTEM_REQUIREMENTS.md).
+**For detailed instructions:**
+- Docker installation: See [docs/DOCKER.md](docs/DOCKER.md)
+- Manual installation: See [docs/INSTALL_SYSTEM_REQUIREMENTS.md](docs/INSTALL_SYSTEM_REQUIREMENTS.md)
 
 ### Setting Up Development Environment
 

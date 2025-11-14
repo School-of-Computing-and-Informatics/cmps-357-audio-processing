@@ -4,55 +4,12 @@
 
 The easiest way to run this application is using Docker, which handles all system dependencies automatically.
 
-### Installing Docker
+**For comprehensive Docker installation instructions, including OS-specific setup guides for Windows, macOS, and Linux, see [DOCKER.md](DOCKER.md).**
 
-#### Linux (Ubuntu/Debian)
+Quick start after installing Docker:
 ```bash
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-
-# Add your user to the docker group (optional, to run without sudo)
-sudo usermod -aG docker $USER
-newgrp docker
-
-# Verify installation
-docker --version
-docker compose version
-```
-
-#### macOS
-1. Download and install [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop)
-2. Launch Docker Desktop from Applications
-3. Verify installation:
-   ```bash
-   docker --version
-   docker compose version
-   ```
-
-#### Windows
-1. Download and install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
-2. Launch Docker Desktop
-3. Verify installation in PowerShell or Command Prompt:
-   ```powershell
-   docker --version
-   docker compose version
-   ```
-
-### Using Docker
-
-Once Docker is installed, you can run the application without installing any other dependencies:
-
-```bash
-# Using Docker Compose (preferred)
 docker compose up --build
-
-# Or using Docker commands directly
-docker build -t audio-processor .
-docker run -d -p 5000:5000 --name audio-processor audio-processor
 ```
-
-See the [README.md](../README.md) for more details on using Docker.
 
 ---
 
