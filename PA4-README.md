@@ -2,10 +2,29 @@
 
 **Student Name:** [Your Name]  
 **Date:** [Submission Date]  
-**Course:** CMPS 357
+**Course:** CMPS 357 
 
----
+## Certification of Authenticity ## 
+I certify that the solutions in this assignment are my own work. I have not
+shared them with any person or publicly available website before the deadline
+or within the 24-hour extension period. Any use of AI tools in the preparation
+of this assignment has been explicitly acknowledged below. I have provided a
+complete list of all such tools used, along with minimal documentation
+describing how each was applied to this work.
 
+- [ ] Placing an `X` in the box above indicates my agreement with this Certification of Authenticity.
+
+## AI Tools Used (Example Template, Adjust As Needed) 
+
+**Tool:** GitHub Copilot
+- **Usage:** Provided inline code suggestions for the reverseString() method.
+- **Verification:** Suggestions were reviewed, tested, and edited as needed.
+
+**Tool:** ChatGPT
+- Usage: Assisted in drafting unit test cases for input validation.
+- Verification: All test cases were checked manually for correctness.
+
+# Assignment Instructions
 ## Part 1: Docker Installation and Setup
 
 ### Docker Installation Confirmation
