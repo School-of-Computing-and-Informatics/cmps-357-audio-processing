@@ -1,6 +1,21 @@
 # System Requirements for cmps-357-audio-processing
 
-Before installing Python dependencies, ensure the following system packages and tools are installed:
+## Docker Installation (Recommended)
+
+The easiest way to run this application is using Docker, which handles all system dependencies automatically.
+
+**For comprehensive Docker installation instructions, including OS-specific setup guides for Windows, macOS, and Linux, see [DOCKER.md](DOCKER.md).**
+
+Quick start after installing Docker:
+```bash
+docker compose up --build
+```
+
+---
+
+## Manual Installation (Alternative)
+
+If you prefer not to use Docker, you can install dependencies manually. Before installing Python dependencies, ensure the following system packages and tools are installed:
 
 ## FFmpeg (Required)
 

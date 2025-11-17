@@ -1,0 +1,49 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Bytecode and Python cache dirs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Test runs and coverage outputs
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local development files
+*.log
+*.tmp
+*.swp
+
+# Audio artifacts or local output directories
+data/
+tmp/
+uploads/
+
+# Node/npm caches (if frontend present)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Git metadata (not needed in build context)
+.git/
+.gitignore
+
+# OS and editor junk
+.DS_Store
+Thumbs.db
+
+# Docker artifacts
+docker-compose.override.yml
+docker-compose.dev.yml
+docker-compose.prod.yml

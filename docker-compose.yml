@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  audio_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: audio-processor
+    ports:
+      - "5000:5000"            # host:container
+    volumes:
+      - ./data:/app/data       # persistent audio storage
+      - .:/app                 # (optional) mount source for live development
+    environment:
+      FLASK_ENV: production
+      PYTHONUNBUFFERED: "1"
+    restart: unless-stopped
