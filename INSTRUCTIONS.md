@@ -70,7 +70,7 @@ On **at least one** of your TODO branches:
 Your submission must include:
 
 ### 1. A write-up in the file named [PA4-README.md](PA4-README.md)
-Create this file in the root of your repository and include:
+Edit this file in the root of your repository to include:
 
 - Minimal documentation as given in the syllabus
 - Links to your **three TODO branches** and all **Pull Requests** created
