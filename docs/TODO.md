@@ -5,8 +5,9 @@ This file aggregates in-repo TODO comments and converts them into ready-to-open 
 and tracked todo entries. Each section includes a suggested title, description, acceptance criteria,
 and a short implementation note.
 
-1) ThreadConfig singleton
--------------------------
+ThreadConfig singleton
+---
+
 File: `audio_processor.py` (comment near top)
 
 Title: Refactor `ThreadConfig` to use a singleton pattern
@@ -25,8 +26,9 @@ Acceptance criteria:
 
 Notes: keep API stable and add a small unit test that changes and reads the number.
 
-2) Type-safety & Pylance migration task
---------------------------------------
+Type-safety & Pylance migration task
+---
+
 File(s): `audio_processor.py` and other modules
 
 Title: Migrate code to Type-safety & Pylance guidelines
@@ -43,27 +45,67 @@ Acceptance criteria:
 
 Notes: this is mostly a coordination / multi-file refactor; break into smaller PRs.
 
-3) Parallel processing pattern for audio functions
--------------------------------------------------
+Chunk-level pitch estimation (fundamental frequency)
+---
 File: `audio_processor.py`
 
-Title: Refactor audio processing functions to use the standard parallel processing pattern
+Title: Implement pitch estimation and integrate with dropdown audio analysis options
 
 Severity: high
 
 Description:
-Refactor the audio analysis functions to follow the three-step multi-thread pattern described
-in `MULTITHREADING_PATTERN.md`: (1) chunk processor, (2) unpacker wrapper, (3) AudioProcessor method
-that calls `_parallel_process_audio_chunks()` and aggregates results.
+Add a new audio analysis option, "pitch_estimation", to the dropdown selection list.  
+Implement chunk-level pitch (fundamental frequency) estimation using a simple autocorrelation 
+or YIN-inspired method appropriate for short audio frames. Follow the standard three-step 
+multi-thread pattern described in `MULTITHREADING_PATTERN.md`:
+  (1) chunk processor,
+  (2) unpacker wrapper,
+  (3) a new AudioProcessor method that calls `_parallel_process_audio_chunks()` and aggregates results.
+
+Produce the following aggregate outputs:
+- average pitch (Hz)
+- pitch stability (standard deviation)
+- percent voiced vs. unvoiced chunks
 
 Acceptance criteria:
-- Each expensive audio analysis uses the pattern.
-- Thread usage respects `ThreadConfig`.
-- Existing statistical outputs (max_dbfs, min_dbfs, non_silence_seconds) remain consistent.
+- The new option appears in the dropdown and routes correctly through the pipeline.
+- Pitch estimation runs in parallel following ThreadConfig.
+- Results are numerically stable across repeated evaluations.
+- Add complete tests validating voiced/unvoiced detection, pitch ranges, and aggregation logic.
 
-Notes: implement one function at a time and add tests for correctness.
+Notes: Ensure performance is reasonable; pitch estimation can be expensive.
 
-4) Move imports to the top
+Clipping detection across audio chunks
+---
+File: `audio_processor.py`
+
+Title: Implement clipping detection and integrate with dropdown audio analysis options
+
+Severity: medium
+
+Description:
+Add a new audio analysis option, "clipping_detection", to the dropdown selection list.  
+Implement chunk-level clipping detection by identifying samples exceeding a threshold 
+(e.g., abs(sample) >= 0.98). Follow the three-step multi-thread pattern described in 
+`MULTITHREADING_PATTERN.md`:
+  (1) chunk processor,
+  (2) unpacker wrapper,
+  (3) a new AudioProcessor method that calls `_parallel_process_audio_chunks()` and aggregates results.
+
+Produce the following aggregate outputs:
+- total clipped samples
+- number of clipped chunks
+- clipping ratio (clipped samples / total samples)
+- per-chunk clipping flag
+
+Acceptance criteria:
+- The new option appears in the dropdown and processes correctly through the parallel pattern.
+- Thresholding logic is consistent with the project’s amplitude conventions.
+- Add tests covering clipped vs. non-clipped input, edge cases near the threshold, and aggregation correctness.
+
+Notes: Keep the threshold value configurable for future refinement.
+
+Move imports to the top
 -------------------------
 File: `audio_processor.py`
 
@@ -82,7 +124,7 @@ Acceptance criteria:
 
 Notes: keep imports grouped (stdlib, third-party, local).
 
-5) Add error reporting API endpoint
+Add error reporting API endpoint
 ----------------------------------
 File: `app.py` (comment near line ~37)
 
@@ -104,7 +146,7 @@ Acceptance criteria:
 Notes: keep the initial implementation simple (write to server log); we can later add
 persistence (file/db) or integration with an external error-tracking service.
 
-6) Add configuration file support
+Add configuration file support
 ---------------------------------
 Severity: low
 
@@ -123,7 +165,7 @@ Acceptance criteria:
 
 Notes: Consider using python-dotenv for .env support or PyYAML for YAML config files.
 
-7) Add logging infrastructure
+Add logging infrastructure
 -----------------------------
 Severity: medium
 
@@ -143,27 +185,8 @@ Acceptance criteria:
 
 Notes: Use logging.getLogger(__name__) pattern for module-specific loggers.
 
-8) Add Docker support
---------------------
-Severity: low
-
-Title: Create Dockerfile and docker-compose.yml for containerized deployment
-
-Description:
-Add Docker support to simplify deployment and ensure consistent environments. Include
-Dockerfile with all system dependencies (FFmpeg, Python, etc.) and docker-compose.yml
-for easy orchestration.
-
-Acceptance criteria:
-- Create Dockerfile with all system dependencies
-- Create docker-compose.yml for easy deployment
-- Document Docker usage in README.md
-- Include volume mounting for persistent storage
-- Optimize image size (multi-stage build if needed)
-
-Notes: Base image should include FFmpeg. Consider using python:3.12-slim as base.
-
-9) Add API documentation
+ 
+Add API documentation
 -----------------------
 Severity: low
 
@@ -182,7 +205,7 @@ Acceptance criteria:
 
 Notes: Consider using Flask-RESTX or flask-swagger-ui for automatic doc generation.
 
-10) Add performance benchmarks
+Add performance benchmarks
 ------------------------------
 Severity: low
 
@@ -202,7 +225,7 @@ Acceptance criteria:
 
 Notes: Use pytest-benchmark or create custom timing utilities.
 
-11) Add integration tests
+Add integration tests
 ------------------------
 Severity: medium
 
@@ -221,7 +244,7 @@ Acceptance criteria:
 
 Notes: Keep test fixtures small (<1MB) and store in tests/fixtures/.
 
-12) Add user session management
+Add user session management
 -------------------------------
 Severity: low
 
@@ -241,7 +264,7 @@ Acceptance criteria:
 
 Notes: Consider using Flask-Session for Redis/database-backed sessions if needed.
 
-13) Add file format validation
+Add file format validation
 ------------------------------
 Severity: medium
 
@@ -260,7 +283,7 @@ Acceptance criteria:
 
 Notes: Use pydub's file opening to validate format, catch exceptions appropriately.
 
-14) Add audio preview/waveform
+Add audio preview/waveform
 ------------------------------
 Severity: low
 
@@ -279,7 +302,7 @@ Acceptance criteria:
 
 Notes: Consider using wavesurfer.js for frontend or generate images with matplotlib.
 
-15) Add batch processing support
+Add batch processing support
 --------------------------------
 Severity: low
 
