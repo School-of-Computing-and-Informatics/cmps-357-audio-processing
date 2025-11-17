@@ -16,9 +16,9 @@ The repository includes:
 Your tasks:
 
 1. **Fork** the repository (done when starting the GitHub Classroom assignment).  
-2. Install Docker following the instructions in the repo.  
+2. Install Docker following the instructions in [docs/DOCKER.md](docs/DOCKER.md).  
 3. Build the Docker image using the existing Dockerfile.  
-4. Run the container using Docker Compose or the appropriate Docker commands.  
+4. Run the container using docker compose or the appropriate Docker commands.  
 5. Confirm that the application starts and runs correctly.
 
 Your short write-up should confirm:
@@ -31,7 +31,7 @@ Your short write-up should confirm:
 
 ## Part 2: Complete Three TODO Items (Each in Its Own Branch, With Tests)
 
-Open [docs/TODO.md](docs/TODO.md) in the repository. Each item includes a severity level.
+Review the available TODO items in [docs/TODO.md](docs/TODO.md). Each item includes a severity level and detailed acceptance criteria.
 
 ### Requirements
 
@@ -52,7 +52,7 @@ Open [docs/TODO.md](docs/TODO.md) in the repository. Each item includes a severi
      - Maintain an `AGENT-TRANSCRIPT-<todo-title>.md` file with a summary of the LLM conversation.
      - Push each branch to `origin`
      - Create a Pull Request to merge the branch into main
-   - Othewise, for Agent Tasks in Github, the Branch and Pull Requests are already created by the Agent.
+   - Otherwise, for Agent Tasks in GitHub, the Branch and Pull Requests are already created by the Agent.
 
 ### GitHub Copilot Agent Requirement
 
@@ -70,10 +70,10 @@ On **at least one** of your TODO branches:
 Your submission must include:
 
 ### 1. A write-up in the file named [PA4-README.md](PA4-README.md)
-Include:
+Create this file in the root of your repository and include:
 
 - Minimal documentation as given in the syllabus
-- Links to your **three TODO branches**  and all **Pull Requests** created
+- Links to your **three TODO branches** and all **Pull Requests** created
 - Prompts used for:
   - Implementations  
   - Test generation  
@@ -110,12 +110,12 @@ To receive full credit, you must:
 - Install Docker successfully  
 - Build and run the container  
 - Fork the repo and create **three separate TODO branches**  
-- Fully implement three TODO items  
+- Fully implement three TODO items (see [docs/TODO.md](docs/TODO.md))  
 - Ensure **two TODO items** are medium/high severity  
 - Generate and validate tests for each TODO  
 - Confirm everything runs inside Docker  
 - Use GitHub Copilot Agent review on at least one branch  
 - Provide Docker Desktop screenshots showing container execution  
-- Provide diff PDFs for each branch  
+- Provide branch comparison links or summaries for each branch in [PA4-README.md](PA4-README.md)  
 - Provide a write-up documenting LLM usage and decisions  
 
